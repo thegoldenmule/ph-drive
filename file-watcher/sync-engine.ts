@@ -14,6 +14,7 @@ import path from "node:path";
 import { DriveGql, folderPaths } from "../lib/drive-client.js";
 import { Attachments } from "./attachments.js";
 import type { WatcherConfig } from "./config.js";
+import { subscribeToDrive } from "./subscription.js";
 
 type BaseEntry = { type: "file" | "folder"; hash?: string };
 
@@ -54,6 +55,7 @@ export class SyncEngine {
   private base = new Map<string, BaseEntry>();
   private watcher: FSWatcher | null = null;
   private poll: NodeJS.Timeout | null = null;
+  private unsubscribe: (() => void) | null = null;
   private running = false;
   private busy = false;
   private dirty = false;
@@ -110,11 +112,30 @@ export class SyncEngine {
     const trigger = this.debounce(() => void this.syncNow(), 300);
     this.watcher.on("all", trigger);
 
+    // Live push from the switchboard is the primary trigger; the poll below is a
+    // slower safety net for missed events / dropped connections.
+    this.unsubscribe = subscribeToDrive(
+      this.cfg.switchboardUrl,
+      this.cfg.driveId!,
+      trigger,
+      (s, detail) => {
+        if (s === "connected") this.log("switchboard subscription connected");
+        else if (s === "error")
+          this.log(
+            `subscription error: ${detail instanceof Error ? detail.message : String(detail ?? "")}`,
+          );
+      },
+    );
+
     this.poll = setInterval(() => void this.syncNow(), this.cfg.pollIntervalMs);
   }
 
   async stop(): Promise<void> {
     this.running = false;
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
     if (this.poll) clearInterval(this.poll);
     this.poll = null;
     if (this.watcher) await this.watcher.close();

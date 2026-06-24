@@ -33,6 +33,9 @@ importers:
       graphql-ws:
         specifier: ^6.0.8
         version: 6.0.8(graphql@16.12.0)(ws@8.21.0)
+      ws:
+        specifier: ^8.21.0
+        version: 8.21.0
     devDependencies:
       '@electric-sql/pglite':
         specifier: 0.3.15
@@ -73,6 +76,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.3(vite@8.0.14(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))

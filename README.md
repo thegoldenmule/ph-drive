@@ -68,7 +68,10 @@ operations + relationships rather than that subgraph.)
 **Bidirectional sync:** the watcher runs a serialized, idempotent **3-way reconcile**
 (`base` snapshot vs. disk vs. server). Adds/deletes/modifies on either side are propagated;
 content-addressed hashing makes every side effect idempotent, so writes never echo back into
-new operations. `chokidar` and a poll timer both trigger a reconcile.
+new operations. Three things trigger a reconcile: a **live `graphql-ws` subscription** to the
+switchboard's `documentChanges` (the primary, push-based path — server changes reach disk in
+~300ms), `chokidar` for local disk changes, and a slow poll (default 15s) as a safety net for
+dropped connections or missed events.
 
 ---
 
@@ -86,6 +89,7 @@ ph-drive/
 │   ├── index.ts                     #   entrypoint + manager
 │   ├── control-server.ts            #   localhost HTTP control API (editor talks to this)
 │   ├── sync-engine.ts               #   3-way reconcile (bidirectional sync)
+│   ├── subscription.ts              #   graphql-ws live subscription to the switchboard
 │   ├── attachments.ts               #   download/upload bytes via the switchboard
 │   └── config.ts                    #   local config store
 ├── lib/drive-client.ts             # shared reactor GraphQL client (browser + node)

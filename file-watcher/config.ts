@@ -13,6 +13,7 @@ export type WatcherConfig = {
   maxDownloadSizeBytes: number;
   /** substring/segment patterns to ignore on disk */
   exclude: string[];
+  /** fallback reconcile interval; live updates come from the ws subscription */
   pollIntervalMs: number;
   enabled: boolean;
 };
@@ -32,7 +33,7 @@ function defaults(): WatcherConfig {
       ? Number(process.env.MAX_DOWNLOAD_SIZE)
       : 100 * 1024 * 1024,
     exclude: [".DS_Store", "node_modules", ".git"],
-    pollIntervalMs: 3000,
+    pollIntervalMs: 15000,
     enabled: Boolean(
       (process.env.DRIVE_ID && process.env.WATCH_DIR) || false,
     ),
