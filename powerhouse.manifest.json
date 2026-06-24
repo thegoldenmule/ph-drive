@@ -1,0 +1,28 @@
+{
+  "name": "ph-drive",
+  "description": "",
+  "category": "",
+  "publisher": {
+    "name": "",
+    "url": ""
+  },
+  "documentModels": [
+    {
+      "id": "phdrive/file",
+      "name": "PhDriveFile"
+    }
+  ],
+  "apps": [],
+  "editors": [
+    {
+      "name": "PhDriveExplorer",
+      "id": "ph-drive-explorer",
+      "documentTypes": [
+        "phdrive/file"
+      ]
+    }
+  ],
+  "processors": [],
+  "subgraphs": [],
+  "config": []
+}
