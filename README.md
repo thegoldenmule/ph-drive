@@ -7,10 +7,6 @@ both sync through one local **Switchboard**. Drop a file into the editor and it 
 on disk; drop a file into the watched folder and it appears in the editor — folders and
 deletes included, in both directions.
 
-It is modeled on **pure reactor-drive** (folders and files are operations + relationships,
-not a `document-drive` node tree). File contents travel as content-addressed **attachments**,
-never inside operations.
-
 ---
 
 ## What it does
@@ -20,7 +16,7 @@ never inside operations.
 - **disk → editor:** create/delete a file or folder in the watched directory → the watcher
   emits the matching operations → the editor reflects it within a couple of seconds.
 - **Machine-local settings live in the watcher, not a document.** The editor talks to the
-  watcher directly over `localhost` (Chrome) to set the base directory, max download size,
+  watcher directly over `localhost` to set the base directory, max download size,
   exclude globs, and start/stop — settings that are per-host and don't belong in shared state.
 
 ---
@@ -52,9 +48,9 @@ config, so the watcher and editor can point at a local or remote switchboard.
 
 ## How it works
 
-**Drive model (pure reactor-drive, document type `powerhouse/reactor-drive`):**
+**Drive model:**
 
-- **Folders** are identity operations on the drive document — `ADD_FOLDER`, `UPDATE_FOLDER`,
+- **Folders** are identity operations on the `reactor-drive` document — `ADD_FOLDER`, `UPDATE_FOLDER`,
   `REMOVE_FOLDER` (scope `document`).
 - **Files** are separate **`phdrive/file`** documents linked to the drive via an
   `ADD_RELATIONSHIP` of type `drive/child`. Each file document's state holds the attachment
