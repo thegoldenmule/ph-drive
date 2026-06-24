@@ -1,190 +1,214 @@
-# Document Model Boilerplate
+# ph-drive
 
-This Document Model Boilerplate provides code generation for scaffolding editors and models.
-It ensures compatibility with host applications like Connect and the Reactors for seamless document model and editor integration.
+A Google-Drive-style, two-way file sync built on the [Powerhouse](https://powerhouse.inc) stack.
 
-## Standard Document Model Workflow with help of the boilerplate.
+A browser **editor** that looks like file folders and a standalone **Node file-watcher**
+both sync through one local **Switchboard**. Drop a file into the editor and it appears
+on disk; drop a file into the watched folder and it appears in the editor — folders and
+deletes included, in both directions.
 
-This tutorial will guide you through the process of creating a new document model using the Document Model Editor in the Connect app.
+It is modeled on **pure reactor-drive** (folders and files are operations + relationships,
+not a `document-drive` node tree). File contents travel as content-addressed **attachments**,
+never inside operations.
 
-<details>
-<summary>Available NPM commands</summary>
+---
 
-- `generate`: Updates the generated code according to the JSON spec and GraphQL schema of your document model, made in Connect.
-- `lint`: Checks for errors with oxlint, including type-aware rules and TypeScript type checking.
-- `format`: Formats the code using oxfmt.
-- `build`: Builds the library project using Vite.
-- `storybook`: Starts Storybook in development mode.
-- `build-storybook`: Builds Storybook.
-- `test`: Runs Jest for testing.
+## What it does
 
-</details>
+- **Editor → disk:** drag a file into the Connect editor → it uploads as an attachment and
+  becomes a file node → the watcher downloads the bytes to your local folder.
+- **disk → editor:** create/delete a file or folder in the watched directory → the watcher
+  emits the matching operations → the editor reflects it within a couple of seconds.
+- **Machine-local settings live in the watcher, not a document.** The editor talks to the
+  watcher directly over `localhost` (Chrome) to set the base directory, max download size,
+  exclude globs, and start/stop — settings that are per-host and don't belong in shared state.
 
-### 1. Defining Your Document Model GraphQL Schema
+---
 
-Start by creating your own 'Powerhouse Project' (Document model + editor).
+## Architecture
 
-Step 1: Run the following command to set up your project inside this directory:
+```
+┌──────────────── Chrome ────────────────┐      ┌──────── Node (this repo) ────────┐
+│ Connect studio (pnpm connect)           │ ctrl │ file-watcher/  (pnpm watch)       │
+│  PhDriveExplorer editor                 │ plane│  HTTP control API (localhost)     │
+│   • file-folder UI, drag-drop upload    │◀────▶│   /config /status /fs/list ...    │
+│   • reads tree + writes ops via GraphQL │ CORS │  3-way reconcile sync engine      │
+│   • Settings panel → watcher            │      │  chokidar(baseDir)                │
+└───────────────┬─────────────────────────┘      │  remote attachment service        │
+                │                                 └──────────────┬───────────────────┘
+                │ GraphQL + WS + /attachments                    │ same, to any switchboard URL
+                ▼ (SWITCHBOARD_URL, e.g. http://localhost:4001)  ▼
+        ┌──────────────────── Switchboard (pnpm reactor) ────────────────────┐
+        │ reactor (operation log = source of truth) + PGlite                  │
+        │ document models: powerhouse/reactor-drive (baseline) + phdrive/file │
+        │ reactor-drive NodeProcessor + attachment service (/attachments/*)   │
+        └─────────────────────────────────────────────────────────────────────┘
+```
+
+Every piece is **switchboard-location-independent** — the switchboard URL is pure runtime
+config, so the watcher and editor can point at a local or remote switchboard.
+
+---
+
+## How it works
+
+**Drive model (pure reactor-drive, document type `powerhouse/reactor-drive`):**
+
+- **Folders** are identity operations on the drive document — `ADD_FOLDER`, `UPDATE_FOLDER`,
+  `REMOVE_FOLDER` (scope `document`).
+- **Files** are separate **`phdrive/file`** documents linked to the drive via an
+  `ADD_RELATIONSHIP` of type `drive/child`. Each file document's state holds the attachment
+  ref + metadata (`content`, `mimeType`, `size`, `sha256`, `parentFolder`), so it is
+  self-describing.
+- **File bytes** live in the switchboard's content-addressed **attachment store**
+  (`attachment://v1:<sha256>`), uploaded/downloaded over `/attachments/*` — never inside an
+  operation.
+
+**Reading the tree:** files come from `documentOutgoingRelationships(drive, "drive/child")`
+and folders from folding the drive's operation log. (The reactor-drive node subgraph
+name-collides with the auto-generated document-model subgraph, so the tree is read from raw
+operations + relationships rather than that subgraph.)
+
+**Bidirectional sync:** the watcher runs a serialized, idempotent **3-way reconcile**
+(`base` snapshot vs. disk vs. server). Adds/deletes/modifies on either side are propagated;
+content-addressed hashing makes every side effect idempotent, so writes never echo back into
+new operations. `chokidar` and a poll timer both trigger a reconcile.
+
+---
+
+## Repository layout
+
+```
+ph-drive/
+├── document-models/ph-drive-file/   # custom `phdrive/file` model (attachment ref + metadata)
+├── editors/ph-drive-explorer/       # Connect editor (folder UI, drag-drop, watcher settings)
+│   ├── editor.tsx                   #   file-folder UI + drag-drop upload
+│   ├── module.ts                    #   EditorModule, documentTypes: ["powerhouse/reactor-drive"]
+│   ├── drive-... / attachments-browser.ts / watcher-api.ts
+│   └── components/watcher-settings.tsx
+├── file-watcher/                    # standalone Node sync process
+│   ├── index.ts                     #   entrypoint + manager
+│   ├── control-server.ts            #   localhost HTTP control API (editor talks to this)
+│   ├── sync-engine.ts               #   3-way reconcile (bidirectional sync)
+│   ├── attachments.ts               #   download/upload bytes via the switchboard
+│   └── config.ts                    #   local config store
+├── lib/drive-client.ts             # shared reactor GraphQL client (browser + node)
+├── scripts/create-drive.ts          # create a reactor-drive drive + set its editor
+├── specs/phdrive-file.json          # document-model spec (input to `ph generate`)
+└── processors/ · subgraphs/         # generated scaffolding (unused here)
+```
+
+---
+
+## Prerequisites
+
+- **Node 24+** and **pnpm**
+- **Chrome** (the editor ↔ watcher channel is localhost-only and targeted at Chrome)
+- The **`ph` CLI** (`@powerhousedao/ph-cli`)
+- A local **Connect checkout with reactor-drive support** — see below
+
+### Connect support (linked checkout)
+
+Stock Connect only renders `powerhouse/document-drive` drives. This project links a patched
+Connect checkout via `pnpm-workspace.yaml` `overrides`:
+
+```yaml
+overrides:
+  "@powerhousedao/connect": "link:/…/powerhouse-feature-0/apps/connect"
+  "@powerhousedao/reactor-browser": "link:/…/powerhouse-feature-0/packages/reactor-browser"
+```
+
+> Update these paths to your checkout. The changes there are backward-compatible (both
+> `document-drive` and `reactor-drive` drives work):
+>
+> - **reactor-browser** — a `DRIVE_DOCUMENT_TYPES` list; the drive list and the drive-app
+>   editor selection now include `reactor-drive`; the drive-list refresh subscribes to all
+>   drive types (fixes first-load visibility).
+> - **reactor** (`read-models/document-view.ts`) — preserves `header.meta` across operations,
+>   so a drive's `preferredEditor` is not wiped when a later op (e.g. `ADD_RELATIONSHIP`)
+>   rebuilds the snapshot.
+
+After editing the source of the linked packages, rebuild them
+(`pnpm --filter @powerhousedao/reactor-browser build`, etc.) since the project resolves them
+from `dist`.
+
+---
+
+## Setup
 
 ```bash
-npm create document-model-lib
+pnpm install
 ```
 
-Step 2: Use the Document Model Editor in the Connect app
+## Running it
 
-The following command gives you access to all the powerhouse CLI tools available, install it globally if you are a poweruser.
+Three processes. Use three terminals.
 
 ```bash
-npm install ph-cmd
+# 1) Switchboard (reactor + attachment service), dev mode loads this project's models
+pnpm reactor                 # http://localhost:4001
+
+# 2) Create a reactor-drive drive (prints DRIVE_ID + the Connect URL)
+pnpm create-drive "My Drive"
+
+# 3) Connect studio, pointed at the drive
+pnpm connect --default-drives-url http://localhost:4001/d/<DRIVE_ID>   # http://localhost:3000
+
+# 4) The file-watcher (boots idle; configure it from the editor)
+WATCHER_PORT=4111 pnpm watch
 ```
 
-Now you are able to launch Connect in Studio Mode (Locally):
+Then in **Chrome** open `http://localhost:3000`, click the drive, and:
 
-```bash
-npm run connect
-```
+1. **Drag a file** onto the editor → it uploads and a tile appears.
+2. Open **⚙ Settings** → it connects to the watcher → **Browse** to a base directory → set a
+   max download size → **Apply & Start**.
+3. The dragged file now appears on disk; drop a file into that directory and it appears in the
+   editor.
 
-Open the 'Document Model' creator at the bottom of connect to define your document mode with it's GraphQL Schema Definition.
-This schema will define the structure and fields for your document model using GraphQL.
-Follow one of our tutorials on Academy to get familiar with the process.
+---
 
-### 2. Defining Document Model Operations
+## Scripts
 
-Using the Document Model Operations Editor, define the operations for your document model and their GraphQL counterparts.
-These operations will handle state changes within your document model.
+| Script | What it does |
+| --- | --- |
+| `pnpm reactor` | Start the local Switchboard (`ph reactor --dev`, port 4001) |
+| `pnpm connect` | Start Connect studio (`ph connect`, port 3000) |
+| `pnpm create-drive [name]` | Create a `powerhouse/reactor-drive` drive, set its editor, print its id |
+| `pnpm watch` | Start the standalone file-watcher (control API + sync) |
+| `pnpm generate` | Re-run document-model / editor codegen |
+| `pnpm tsc` | Type-check |
+| `pnpm lint` / `pnpm format` | oxlint / oxfmt |
+| `pnpm test` | vitest |
 
-**Best Practices:**
+## Configuration (file-watcher)
 
-- Clearly define CRUD operations (Create, Read, Update, Delete).
-- Use GraphQL input types to specify the parameters for each operation.
-- Ensure that operations align with user intent to maintain a clean and understandable API.
+The watcher reads bootstrap defaults from env, then is reconfigured at runtime by the editor
+and persists to a local JSON file.
 
-### 3. Generating Scaffolding Code
+| Env var | Default | Purpose |
+| --- | --- | --- |
+| `WATCHER_PORT` | `4111` | Control-API port |
+| `SWITCHBOARD_URL` | `http://localhost:4001` | Switchboard to sync against |
+| `DRIVE_ID` | — | Drive to sync (set via the editor if omitted) |
+| `WATCH_DIR` | — | Base directory to mirror (set via the editor if omitted) |
+| `MAX_DOWNLOAD_SIZE` | `100MB` | Skip downloading files larger than this |
+| `WATCHER_CONFIG` | `~/.ph-drive-watcher/config.json` | Where the persisted config lives |
 
-Export your document model as a .zip file from Connect.
-Import the .zip file into your project directory created in Step 1.
-Run the following command to generate the scaffolding code:
+### Watcher control API
 
-```bash
-npm run generate YourModelName.phdm.zip
-```
+`GET /health` · `GET /status` · `GET /config` · `PUT /config` · `POST /start` · `POST /stop`
+· `GET /fs/list?path=` (host directory listing for the base-dir picker). CORS-enabled for the
+Connect origin.
 
-This will create a new directory under /document-models containing:
+---
 
-JSON file with the document model specification.
-GraphQL file with state and operation schemas.
-A gen/ folder with autogenerated code.
-A src/ folder for your custom code implementation.
+## Known limitations
 
-### 4. Implementing Reducer Code and Unit Tests
-
-Navigate to the reducer directory:
-
-```bash
-cd document-models/"YourModelName"/src/reducers
-```
-
-Implement the reducer functions for each document model operation. These functions will handle state transitions.
-
-Add utility functions in:
-
-```bash
-document-models/"YourModelName"/src/utils.ts
-```
-
-Write unit tests to ensure the correctness of your reducers:
-
-Test files should be located in:
-
-```bash
-document-models/"YourModelName"/src/reducers/tests
-```
-
-Run the tests:
-
-```bash
-npm test
-```
-
-Test the editor functionality:
-
-```bash
-npm run connect
-```
-
-### 5. Implementing Document Editors
-
-Generate the editor template for your document model:
-
-```bash
-npm run generate -- --editor YourModelName --document-types powerhouse/YourModelName
-```
-
-The --editor flag specifies the name of your document model.
-The --document-types flag links the editor to your document model type.
-After generation:
-
-Open the editor template:
-
-```bash
-editors/YourModelName/editor.tsx
-```
-
-Customize the editor interface to suit your document model.
-
-### 6. Testing the Document Editor
-
-Run the Connect app to test your document editor:
-
-```bash
-npm run connect
-```
-
-Verify that the editor functions as expected.
-Perform end-to-end testing to ensure smooth integration between the document model and its editor.
-
-### 7. Adding a Manifest File
-
-Create a manifest file to describe your document model and editor. This enables proper integration with the host application.
-
-**Example manifest.json:**
-
-```json
-{
-  "name": "your-model-name",
-  "description": "A brief description of your document model.",
-  "category": "your-category", // e.g., "Finance", "People Ops", "Legal"
-  "publisher": {
-    "name": "your-publisher-name",
-    "url": "your-publisher-url"
-  },
-  "documentModels": [
-    {
-      "id": "your-model-id",
-      "name": "your-model-name"
-    }
-  ],
-  "editors": [
-    {
-      "id": "your-editor-id",
-      "name": "your-editor-name",
-      "documentTypes": ["your-model-id"]
-    }
-  ]
-}
-```
-
-### Steps to finalize:
-
-Place the manifest file at your project root.
-Update your index.js to export your modules and include the new document model and editor.
-
-### Final Thoughts
-
-You've now successfully created a Document Model and its corresponding Editor using the Connect app!
-
-Next Steps:
-
-- Expand functionality: Add more operations or complex logic to your document model.
-- Improve UX: Enhance the document editor for a smoother user experience.
-- Integrate with other systems: Use APIs or GraphQL to connect your document model with external services.
+- **Chrome-only**, by design (localhost editor ↔ watcher channel).
+- **Requires the linked Connect checkout** for reactor-drive support (see above).
+- Conflict handling is demo-grade: on a simultaneous edit of the same path on both sides,
+  **the server wins** (the change is surfaced in the watcher status).
+- Linking a different-version Connect checkout can produce a **type-only** `tsc` mismatch in
+  the generated `processors/factory.ts` (two `@powerhousedao/shared` versions). It does not
+  affect runtime; align the versions if you need a fully green `tsc`.
