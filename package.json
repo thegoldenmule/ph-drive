@@ -13,6 +13,10 @@
       "browser": "./dist/browser/index.js",
       "node": "./dist/node/index.mjs"
     },
+    "./reactor": {
+      "types": "./dist/types/reactor/index.d.ts",
+      "browser": "./dist/browser/reactor/index.js"
+    },
     "./document-models": {
       "types": "./dist/types/document-models/index.d.ts",
       "browser": "./dist/browser/document-models/index.js",
@@ -43,13 +47,21 @@
       "browser": "./dist/browser/processors/index.js",
       "node": "./dist/node/processors/index.mjs"
     },
+    "./pieces": {
+      "types": "./dist/types/pieces/index.d.ts",
+      "node": "./dist/node/pieces/index.mjs"
+    },
+    "./pieces/*": {
+      "types": "./dist/types/pieces/*/index.d.ts",
+      "node": "./dist/node/pieces/*/index.mjs"
+    },
     "./manifest": "./dist/powerhouse.manifest.json",
     "./style.css": "./dist/style.css"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
     "lint": "oxlint --type-aware --type-check",
     "lint:fix": "oxlint --type-aware --type-check --fix",
     "format": "oxfmt",
@@ -71,13 +83,14 @@
   "devDependencies": {
     "@electric-sql/pglite": "0.3.15",
     "@electric-sql/pglite-tools": "0.2.20",
-    "@powerhousedao/connect": "6.2.0-dev.32",
-    "@powerhousedao/design-system": "6.2.0-dev.32",
+    "@powerhousedao/connect": "6.2.3",
+    "@powerhousedao/design-system": "6.2.3",
     "@powerhousedao/document-engineering": "1.40.5",
-    "@powerhousedao/ph-cli": "6.2.0-dev.32",
-    "@powerhousedao/reactor": "6.2.0-dev.32",
-    "@powerhousedao/reactor-browser": "6.2.0-dev.32",
-    "@powerhousedao/shared": "6.2.0-dev.32",
+    "@powerhousedao/ph-cli": "6.2.3",
+    "@powerhousedao/reactor": "6.2.3",
+    "@powerhousedao/reactor-attachments": "6.2.3",
+    "@powerhousedao/reactor-browser": "6.2.3",
+    "@powerhousedao/shared": "6.2.3",
     "@tailwindcss/cli": "^4.1.18",
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^24.9.2",
@@ -86,37 +99,37 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "4.1.1",
-    "document-model": "6.2.0-dev.32",
+    "chokidar": "^5.0.0",
+    "document-model": "6.2.3",
     "graphql": "16.12.0",
     "graphql-tag": "2.12.6",
-    "oxfmt": "0.55.0",
+    "graphql-ws": "^6.0.8",
+    "oxfmt": "0.68.0",
     "oxlint": "1.70.0",
     "oxlint-tsgolint": "0.23.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "tailwindcss": "^4.1.16",
     "tsx": "^4.22.4",
-    "typescript": "^5.9.3",
+    "typescript": "~7.0.2",
     "vite": "^8.0.10",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "4.1.1",
+    "ws": "^8.21.0",
     "zod": "4.3.6"
   },
   "peerDependencies": {
-    "@powerhousedao/reactor-browser": "6.2.0-dev.32",
-    "document-model": "6.2.0-dev.32",
+    "@powerhousedao/reactor-browser": "6.2.3",
+    "document-model": "6.2.3",
     "graphql": "^16",
     "graphql-tag": "^2",
     "react": "^19",
     "react-dom": "^19",
     "zod": "^4"
   },
-  "dependencies": {
-    "@powerhousedao/reactor-api": "6.2.0-dev.29",
-    "@powerhousedao/reactor-attachments": "6.2.0-dev.29",
-    "@powerhousedao/reactor-drive": "6.2.0-dev.29",
-    "chokidar": "^5.0.0",
-    "graphql-ws": "^6.0.8",
-    "ws": "^8.21.0"
+  "resolutions": {
+    "**/date-fns": "4.3.0",
+    "**/rolldown": "1.0.2",
+    "**/vite": "8.0.14"
   }
 }
