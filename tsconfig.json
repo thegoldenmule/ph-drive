@@ -7,6 +7,8 @@
       "document-models/*": ["./document-models/*/index.ts"],
       "editors": ["./editors/index.ts"],
       "editors/*": ["./editors/*/index.ts"],
+      "pieces": ["./pieces/index.ts"],
+      "pieces/*": ["./pieces/*/index.ts"],
       "processors/*": ["./processors/*/index.ts"],
       "subgraphs": ["./subgraphs/index.ts"],
       "subgraphs/*": ["./subgraphs/*/index.ts"]
