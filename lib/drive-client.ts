@@ -12,6 +12,19 @@ export const REACTOR_DRIVE_DOCUMENT_TYPE = "powerhouse/reactor-drive";
 export const PHDRIVE_FILE_DOCUMENT_TYPE = "phdrive/file";
 export const DRIVE_CHILD_RELATIONSHIP_TYPE = "drive/child";
 
+/**
+ * A ph-drive-file's `content`: the model's `AttachmentRef` scalar (same
+ * template literal as the reactor's `AttachmentRef`), e.g.
+ * `attachment://v1:<sha256hex>`. Declared here so this client stays
+ * dependency-free.
+ */
+export type AttachmentRef = `attachment://v${number}:${string}`;
+
+/** Same check the model's zod schema applies to `AttachmentRef`. */
+export function isAttachmentRef(v: unknown): v is AttachmentRef {
+  return typeof v === "string" && /^attachment:\/\/v\d+:.+$/.test(v);
+}
+
 export type DriveFolder = {
   kind: "folder";
   id: string;
@@ -24,7 +37,7 @@ export type DriveFile = {
   id: string;
   name: string;
   parentFolder: string | null;
-  content: string | null;
+  content: AttachmentRef | null;
   mimeType: string | null;
   size: number | null;
   sha256: string | null;
@@ -44,7 +57,7 @@ function toDriveFile(id: string, name: string, state: unknown): DriveFile {
     id,
     name,
     parentFolder: stringOrNull(g.parentFolder),
-    content: stringOrNull(g.content),
+    content: isAttachmentRef(g.content) ? g.content : null,
     mimeType: stringOrNull(g.mimeType),
     size: typeof g.size === "number" ? g.size : null,
     sha256: stringOrNull(g.sha256),
@@ -174,7 +187,7 @@ export class DriveGql {
     file: {
       name: string;
       parentFolder: string | null;
-      content: string;
+      content: AttachmentRef;
       mimeType: string;
       size: number;
       sha256: string;
@@ -229,7 +242,7 @@ export class DriveGql {
   async setFileContent(
     fileId: string,
     file: {
-      content: string;
+      content: AttachmentRef;
       mimeType: string;
       size: number;
       sha256: string;

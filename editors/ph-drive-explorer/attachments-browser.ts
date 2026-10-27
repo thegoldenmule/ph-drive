@@ -1,3 +1,4 @@
+import { type AttachmentRef, isAttachmentRef } from "../../lib/drive-client.js";
 import { isRecord } from "../../lib/unknown.js";
 
 // Matches the watcher's node-side sha256 so the same bytes resolve to the same attachment ref.
@@ -24,8 +25,18 @@ function requireString(
   return v;
 }
 
+function requireRef(
+  body: Record<string, unknown>,
+  step: string,
+): AttachmentRef {
+  const v = requireString(body, "ref", step);
+  if (!isAttachmentRef(v))
+    throw new Error(`${step}: "ref" is not an attachment ref: ${v}`);
+  return v;
+}
+
 export type UploadedAttachment = {
-  ref: string;
+  ref: AttachmentRef;
   hash: string;
   size: number;
   mimeType: string;
@@ -54,7 +65,7 @@ export async function uploadAttachment(
 
   if (reserve.status === 409) {
     // 409 = already stored; dedup, nothing to upload
-    const ref = requireString(await readJson(reserve), "ref", "reserve (409)");
+    const ref = requireRef(await readJson(reserve), "reserve (409)");
     return { ref, hash, size, mimeType };
   }
   if (reserve.status !== 201) {
@@ -64,7 +75,7 @@ export async function uploadAttachment(
   }
   const reserved = await readJson(reserve);
   const reservationId = requireString(reserved, "reservationId", "reserve");
-  const ref = requireString(reserved, "ref", "reserve");
+  const ref = requireRef(reserved, "reserve");
 
   const put = await fetch(`${base}/attachments/reservations/${reservationId}`, {
     method: "PUT",
@@ -76,7 +87,7 @@ export async function uploadAttachment(
   }
   const result = await readJson(put);
   return {
-    ref: typeof result.ref === "string" ? result.ref : ref,
+    ref: isAttachmentRef(result.ref) ? result.ref : ref,
     hash: typeof result.hash === "string" ? result.hash : hash,
     size,
     mimeType,

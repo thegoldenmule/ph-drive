@@ -11,7 +11,11 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { DriveGql, folderPaths } from "../lib/drive-client.js";
+import {
+  type AttachmentRef,
+  DriveGql,
+  folderPaths,
+} from "../lib/drive-client.js";
 import { errorMessage } from "../lib/unknown.js";
 import { Attachments } from "./attachments.js";
 import type { WatcherConfig } from "./config.js";
@@ -213,7 +217,7 @@ export class SyncEngine {
       {
         nodeId: string;
         hash: string | null;
-        ref: string | null;
+        ref: AttachmentRef | null;
         size: number | null;
         mimeType: string | null;
       }
@@ -480,7 +484,7 @@ export class SyncEngine {
   private async downloadTo(
     baseDir: string,
     p: string,
-    s: { nodeId: string; ref: string | null; size: number | null },
+    s: { nodeId: string; ref: AttachmentRef | null; size: number | null },
     skipped: string[],
   ): Promise<boolean> {
     if (!s.ref) return false;

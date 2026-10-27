@@ -72,8 +72,8 @@ export class Attachments {
   }
 
   /** Download bytes; `documentId` is the ph-drive-file document that references `ref`. */
-  async download(ref: string, documentId: string): Promise<Uint8Array> {
-    const resp = await this.svc.get(ref as AttachmentRef, { documentId });
+  async download(ref: AttachmentRef, documentId: string): Promise<Uint8Array> {
+    const resp = await this.svc.get(ref, { documentId });
     const reader = resp.body.getReader();
     const chunks: Uint8Array[] = [];
     let total = 0;
