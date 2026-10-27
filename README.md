@@ -201,6 +201,29 @@ and persists to a local JSON file.
 · `GET /fs/list?path=` (host directory listing for the base-dir picker). CORS-enabled for the
 Connect origin.
 
+## Deploying the Switchboard (Docker)
+
+`docker build --target switchboard .` produces a production (`NODE_ENV=production`) Switchboard
+image. Attachment reads are **document-authorized** (PH 6.2.3+): a reader must name a file
+document whose operations reference the attachment (`?documentId=…`). The watcher downloads via
+the `download-target` route, which with the default filesystem attachment storage returns an
+HMAC-signed URL, so production needs a signing secret:
+
+| Env var | Required | Purpose |
+| --- | --- | --- |
+| `PH_ATTACHMENT_URL_SIGNING_SECRET` | yes, for filesystem storage in production | Signs attachment download URLs. At least 32 characters, no surrounding whitespace; use the same value on every Switchboard sharing the attachment storage. Without it `download-target` answers `503`, so the entrypoint refuses to start. |
+| `PH_ATTACHMENT_STORAGE` | no (`filesystem`) | `s3` uses presigned URLs and does not need the signing secret. |
+
+Supply the secret at runtime, never in the image:
+
+```bash
+docker run -e PH_ATTACHMENT_URL_SIGNING_SECRET="$(openssl rand -hex 32)" … <switchboard-image>
+```
+
+Generate it once and store it with your deployment secrets: a new value on each start breaks
+previously issued URLs. Local `pnpm reactor` (non-production) signs with a per-process random
+secret and needs nothing.
+
 ---
 
 ## Known limitations

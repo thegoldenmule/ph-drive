@@ -133,6 +133,10 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV DATABASE_URL=""
 ENV SKIP_DB_MIGRATIONS="false"
+# PH_ATTACHMENT_URL_SIGNING_SECRET (>= 32 chars) must be supplied at runtime,
+# e.g. `docker run -e PH_ATTACHMENT_URL_SIGNING_SECRET=$(openssl rand -hex 32)`.
+# Never bake it into the image; the entrypoint refuses to start without it
+# under NODE_ENV=production with filesystem attachment storage (the default).
 
 EXPOSE ${PORT}
 
