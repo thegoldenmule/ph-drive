@@ -94,18 +94,19 @@ export class SyncEngine {
 
   async start(): Promise<void> {
     if (this.running) await this.stop();
-    if (!this.cfg.driveId || !this.cfg.baseDir) {
+    const { driveId, baseDir } = this.cfg;
+    if (!driveId || !baseDir) {
       this.log("not starting: driveId and baseDir are required");
       return;
     }
-    fs.mkdirSync(this.cfg.baseDir, { recursive: true });
+    fs.mkdirSync(baseDir, { recursive: true });
     this.base.clear();
     this.running = true;
-    this.log(`starting sync: drive ${this.cfg.driveId} <-> ${this.cfg.baseDir}`);
+    this.log(`starting sync: drive ${driveId} <-> ${baseDir}`);
 
     await this.syncNow(); // empty base => union, no deletes
 
-    this.watcher = chokidar.watch(this.cfg.baseDir, {
+    this.watcher = chokidar.watch(baseDir, {
       ignoreInitial: true,
       awaitWriteFinish: { stabilityThreshold: 250, pollInterval: 50 },
     });
@@ -116,7 +117,7 @@ export class SyncEngine {
     // slower safety net for missed events / dropped connections.
     this.unsubscribe = subscribeToDrive(
       this.cfg.switchboardUrl,
-      this.cfg.driveId!,
+      driveId,
       trigger,
       (s, detail) => {
         if (s === "connected") this.log("switchboard subscription connected");
@@ -425,7 +426,7 @@ export class SyncEngine {
   private async downloadTo(
     baseDir: string,
     p: string,
-    s: { ref: string | null; size: number | null },
+    s: { nodeId: string; ref: string | null; size: number | null },
     skipped: string[],
   ): Promise<boolean> {
     if (!s.ref) return false;
@@ -434,7 +435,7 @@ export class SyncEngine {
       this.log(`skip download (too large) ${p} (${s.size} bytes)`);
       return false;
     }
-    const bytes = await this.att.download(s.ref);
+    const bytes = await this.att.download(s.ref, s.nodeId);
     const abs = path.join(baseDir, toFsPath(p));
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     const tmp = `${abs}.phd-dl-${process.pid}`;
