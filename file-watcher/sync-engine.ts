@@ -33,12 +33,24 @@ export type SyncStatus = {
 };
 
 const MIME: Record<string, string> = {
-  ".txt": "text/plain", ".md": "text/markdown", ".json": "application/json",
-  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-  ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml",
-  ".pdf": "application/pdf", ".csv": "text/csv", ".html": "text/html",
-  ".js": "text/javascript", ".ts": "text/plain", ".zip": "application/zip",
-  ".mp4": "video/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav",
+  ".txt": "text/plain",
+  ".md": "text/markdown",
+  ".json": "application/json",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".pdf": "application/pdf",
+  ".csv": "text/csv",
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".ts": "text/plain",
+  ".zip": "application/zip",
+  ".mp4": "video/mp4",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
 };
 function mimeOf(name: string): string {
   return MIME[path.extname(name).toLowerCase()] ?? "application/octet-stream";
@@ -82,7 +94,12 @@ export class SyncEngine {
   }
 
   getStatus(): SyncStatus {
-    return { ...this.status, running: this.running, busy: this.busy, log: this.logLines.slice(-50) };
+    return {
+      ...this.status,
+      running: this.running,
+      busy: this.busy,
+      log: this.logLines.slice(-50),
+    };
   }
 
   private log(msg: string): void {
@@ -173,7 +190,10 @@ export class SyncEngine {
 
     // snapshot disk
     const diskFolders = new Set<string>();
-    const diskFiles = new Map<string, { abs: string; hash: string; size: number }>();
+    const diskFiles = new Map<
+      string,
+      { abs: string; hash: string; size: number }
+    >();
     this.walk(baseDir, "", diskFolders, diskFiles);
 
     // snapshot server
@@ -186,10 +206,18 @@ export class SyncEngine {
     }
     const serverFiles = new Map<
       string,
-      { nodeId: string; hash: string | null; ref: string | null; size: number | null; mimeType: string | null }
+      {
+        nodeId: string;
+        hash: string | null;
+        ref: string | null;
+        size: number | null;
+        mimeType: string | null;
+      }
     >();
     for (const file of tree.files) {
-      const parent = file.parentFolder ? (fpaths.get(file.parentFolder) ?? "") : "";
+      const parent = file.parentFolder
+        ? (fpaths.get(file.parentFolder) ?? "")
+        : "";
       const p = `${parent}/${file.name}`;
       serverFiles.set(p, {
         nodeId: file.id,
@@ -237,13 +265,17 @@ export class SyncEngine {
           this.log(`-folder -> server ${p}`);
         }
       } else if (bHas && dHas && !sHas) {
-        await fsp.rm(path.join(baseDir, toFsPath(p)), { recursive: true, force: true });
+        await fsp.rm(path.join(baseDir, toFsPath(p)), {
+          recursive: true,
+          force: true,
+        });
         diskFolders.delete(p);
         this.log(`-folder -> disk ${p}`);
       }
     }
     for (const p of folderPathsAll) {
-      if (serverFolders.has(p) || diskFolders.has(p)) newBase.set(p, { type: "folder" });
+      if (serverFolders.has(p) || diskFolders.has(p))
+        newBase.set(p, { type: "folder" });
     }
 
     // reconcile FILES
@@ -269,14 +301,16 @@ export class SyncEngine {
         if (localChanged && remoteChanged) {
           conflicts.push(p);
           this.log(`!conflict ${p} -> server wins`);
-          if (await this.downloadTo(baseDir, p, s, skipped)) newBase.set(p, { type: "file", hash: s.hash ?? d.hash });
+          if (await this.downloadTo(baseDir, p, s, skipped))
+            newBase.set(p, { type: "file", hash: s.hash ?? d.hash });
           else newBase.set(p, { type: "file", hash: d.hash });
         } else if (localChanged) {
           await this.uploadUpdate(driveId, p, s.nodeId, d, serverFolders);
           newBase.set(p, { type: "file", hash: d.hash });
           this.log(`~file -> server ${p}`);
         } else {
-          if (await this.downloadTo(baseDir, p, s, skipped)) newBase.set(p, { type: "file", hash: s.hash ?? bHash });
+          if (await this.downloadTo(baseDir, p, s, skipped))
+            newBase.set(p, { type: "file", hash: s.hash ?? bHash });
           this.log(`~file -> disk ${p}`);
         }
         continue;
@@ -303,7 +337,8 @@ export class SyncEngine {
           await this.gql.removeFile(driveId, s.nodeId);
           this.log(`-file -> server ${p}`);
         } else {
-          if (await this.downloadTo(baseDir, p, s, skipped)) newBase.set(p, { type: "file", hash: s.hash ?? "" });
+          if (await this.downloadTo(baseDir, p, s, skipped))
+            newBase.set(p, { type: "file", hash: s.hash ?? "" });
           this.log(`+file -> disk ${p}`);
         }
         continue;
@@ -344,7 +379,11 @@ export class SyncEngine {
         const fileAbs = path.join(base, toFsPath(childRel));
         try {
           const st = fs.statSync(fileAbs);
-          files.set(childRel, { abs: fileAbs, hash: sha256File(fileAbs), size: st.size });
+          files.set(childRel, {
+            abs: fileAbs,
+            hash: sha256File(fileAbs),
+            size: st.size,
+          });
         } catch {
           /* file vanished mid-walk */
         }
@@ -378,7 +417,10 @@ export class SyncEngine {
     return serverFolders.get(p)!;
   }
 
-  private parentFolderId(p: string, serverFolders: Map<string, string>): string | null {
+  private parentFolderId(
+    p: string,
+    serverFolders: Map<string, string>,
+  ): string | null {
     const parent = p.slice(0, p.lastIndexOf("/"));
     return parent ? (serverFolders.get(parent) ?? null) : null;
   }
@@ -392,7 +434,11 @@ export class SyncEngine {
     const name = p.slice(p.lastIndexOf("/") + 1);
     const parentId = this.parentFolderId(p, serverFolders);
     const bytes = await fsp.readFile(d.abs);
-    const { ref, hash, size } = await this.att.upload(bytes, name, mimeOf(name));
+    const { ref, hash, size } = await this.att.upload(
+      bytes,
+      name,
+      mimeOf(name),
+    );
     await this.gql.createFile(driveId, {
       name,
       parentFolder: parentId,
@@ -413,7 +459,11 @@ export class SyncEngine {
     const name = p.slice(p.lastIndexOf("/") + 1);
     const parentId = this.parentFolderId(p, serverFolders);
     const bytes = await fsp.readFile(d.abs);
-    const { ref, hash, size } = await this.att.upload(bytes, name, mimeOf(name));
+    const { ref, hash, size } = await this.att.upload(
+      bytes,
+      name,
+      mimeOf(name),
+    );
     await this.gql.setFileContent(nodeId, {
       content: ref,
       mimeType: mimeOf(name),

@@ -26,17 +26,13 @@ function defaults(): WatcherConfig {
   return {
     switchboardUrl: process.env.SWITCHBOARD_URL ?? "http://localhost:4001",
     driveId: process.env.DRIVE_ID ?? null,
-    baseDir: process.env.WATCH_DIR
-      ? path.resolve(process.env.WATCH_DIR)
-      : null,
+    baseDir: process.env.WATCH_DIR ? path.resolve(process.env.WATCH_DIR) : null,
     maxDownloadSizeBytes: process.env.MAX_DOWNLOAD_SIZE
       ? Number(process.env.MAX_DOWNLOAD_SIZE)
       : 100 * 1024 * 1024,
     exclude: [".DS_Store", "node_modules", ".git"],
     pollIntervalMs: 15000,
-    enabled: Boolean(
-      (process.env.DRIVE_ID && process.env.WATCH_DIR) || false,
-    ),
+    enabled: Boolean((process.env.DRIVE_ID && process.env.WATCH_DIR) || false),
   };
 }
 
@@ -70,7 +66,10 @@ export function applyPatch(
   if (next.switchboardUrl) {
     next.switchboardUrl = next.switchboardUrl.replace(/\/+$/, "");
   }
-  if (!Number.isFinite(next.maxDownloadSizeBytes) || next.maxDownloadSizeBytes < 0) {
+  if (
+    !Number.isFinite(next.maxDownloadSizeBytes) ||
+    next.maxDownloadSizeBytes < 0
+  ) {
     next.maxDownloadSizeBytes = current.maxDownloadSizeBytes;
   }
   if (!Array.isArray(next.exclude)) next.exclude = current.exclude;

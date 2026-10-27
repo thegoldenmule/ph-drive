@@ -102,7 +102,9 @@ async function main() {
   if (cfg.enabled && cfg.driveId && cfg.baseDir) {
     await manager.start();
   } else {
-    console.log("[watcher] idle — configure it from the editor's Settings panel.");
+    console.log(
+      "[watcher] idle — configure it from the editor's Settings panel.",
+    );
   }
 
   const shutdown = async () => {

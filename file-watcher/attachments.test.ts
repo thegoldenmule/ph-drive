@@ -13,19 +13,25 @@ const bytes = new TextEncoder().encode("hello world");
 const hash = sha256Hex(bytes);
 const ref = createRef(hash);
 
-function fakeService(overrides: Partial<IAttachmentService>): IAttachmentService {
+function fakeService(
+  overrides: Partial<IAttachmentService>,
+): IAttachmentService {
   return {
     reserve: vi.fn(() => Promise.reject(new Error("unexpected reserve"))),
     stat: vi.fn(() => Promise.reject(new Error("unexpected stat"))),
     get: vi.fn(() => Promise.reject(new Error("unexpected get"))),
-    getDownloadTarget: vi.fn(() => Promise.reject(new Error("unexpected target"))),
+    getDownloadTarget: vi.fn(() =>
+      Promise.reject(new Error("unexpected target")),
+    ),
     ...overrides,
   };
 }
 
 describe("Attachments.upload", () => {
   it("returns the server ref without uploading when reserve reports AttachmentAlreadyExists", async () => {
-    const reserve = vi.fn(() => Promise.reject(new AttachmentAlreadyExists(hash, ref)));
+    const reserve = vi.fn(() =>
+      Promise.reject(new AttachmentAlreadyExists(hash, ref)),
+    );
     const stat = vi.fn(() => Promise.reject(new Error("unexpected stat")));
     const att = new Attachments("http://sb", fakeService({ reserve, stat }));
 
@@ -62,7 +68,9 @@ describe("Attachments.upload", () => {
       "http://sb",
       fakeService({ reserve: vi.fn(() => Promise.reject(new Error("boom"))) }),
     );
-    await expect(att.upload(bytes, "a.txt", "text/plain")).rejects.toThrow("boom");
+    await expect(att.upload(bytes, "a.txt", "text/plain")).rejects.toThrow(
+      "boom",
+    );
   });
 });
 

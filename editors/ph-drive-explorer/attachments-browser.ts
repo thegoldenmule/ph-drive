@@ -40,7 +40,9 @@ export async function uploadAttachment(
     return { ref, hash, size, mimeType };
   }
   if (reserve.status !== 201) {
-    throw new Error(`reserve failed: ${reserve.status} ${await reserve.text()}`);
+    throw new Error(
+      `reserve failed: ${reserve.status} ${await reserve.text()}`,
+    );
   }
   const { reservationId, ref } = await reserve.json();
 

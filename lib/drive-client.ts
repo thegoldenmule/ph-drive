@@ -65,7 +65,10 @@ export class DriveGql {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables }),
     });
-    const json = (await res.json()) as { data?: T; errors?: { message: string }[] };
+    const json = (await res.json()) as {
+      data?: T;
+      errors?: { message: string }[];
+    };
     if (json.errors?.length) {
       throw new Error(json.errors.map((e) => e.message).join("; "));
     }
@@ -73,7 +76,10 @@ export class DriveGql {
     return json.data;
   }
 
-  async createDrive(name = "ph-drive", preferredEditor?: string): Promise<string> {
+  async createDrive(
+    name = "ph-drive",
+    preferredEditor?: string,
+  ): Promise<string> {
     const d = await this.gql<{ createEmptyDocument: { id: string } }>(
       `mutation($t:String!){createEmptyDocument(documentType:$t){id}}`,
       { t: REACTOR_DRIVE_DOCUMENT_TYPE },
@@ -103,12 +109,20 @@ export class DriveGql {
   ): Promise<string> {
     const folderId = newId();
     await this.mutate(driveId, [
-      action("ADD_FOLDER", { folderId, parentFolderId: parentFolder, name }, "document"),
+      action(
+        "ADD_FOLDER",
+        { folderId, parentFolderId: parentFolder, name },
+        "document",
+      ),
     ]);
     return folderId;
   }
 
-  async renameFolder(driveId: string, folderId: string, name: string): Promise<void> {
+  async renameFolder(
+    driveId: string,
+    folderId: string,
+    name: string,
+  ): Promise<void> {
     await this.mutate(driveId, [
       action("UPDATE_FOLDER", { folderId, name }, "document"),
     ]);
@@ -120,7 +134,11 @@ export class DriveGql {
     parentFolder: string | null,
   ): Promise<void> {
     await this.mutate(driveId, [
-      action("UPDATE_FOLDER", { folderId, parentFolderId: parentFolder }, "document"),
+      action(
+        "UPDATE_FOLDER",
+        { folderId, parentFolderId: parentFolder },
+        "document",
+      ),
     ]);
   }
 
@@ -256,7 +274,9 @@ export class DriveGql {
     const d = await this.gql<{
       document: {
         document: {
-          operations: { items: { index: number; action: { type: string; input: any } }[] };
+          operations: {
+            items: { index: number; action: { type: string; input: any } }[];
+          };
         };
       } | null;
     }>(

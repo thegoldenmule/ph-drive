@@ -34,8 +34,7 @@ export function WatcherSettings(props: {
       setStatus(s);
       setConfig(c);
       setMaxMb(Math.round(c.maxDownloadSizeBytes / (1024 * 1024)));
-    } catch {
-    }
+    } catch {}
   }, [api]);
 
   useEffect(() => {
@@ -105,64 +104,167 @@ export function WatcherSettings(props: {
   return (
     <div style={overlay} onClick={onClose}>
       <div style={modal} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, flex: 1 }}>Local sync (watcher)</h3>
-          <button style={iconBtn} onClick={onClose}>✕</button>
+        <div
+          style={{ display: "flex", alignItems: "center", marginBottom: 12 }}
+        >
+          <h3 style={{ fontSize: 17, fontWeight: 600, flex: 1 }}>
+            Local sync (watcher)
+          </h3>
+          <button style={iconBtn} onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         <label style={lbl}>Watcher control URL</label>
-        <input style={inp} value={watcherUrl} onChange={(e) => setWatcherUrl(e.target.value)} />
-        <div style={{ fontSize: 12, marginTop: 4, color: online ? "#1a7f37" : "#b3261e" }}>
-          {online === null ? "checking…" : online ? "● connected" : "● not reachable — is `pnpm watch` running?"}
+        <input
+          style={inp}
+          value={watcherUrl}
+          onChange={(e) => setWatcherUrl(e.target.value)}
+        />
+        <div
+          style={{
+            fontSize: 12,
+            marginTop: 4,
+            color: online ? "#1a7f37" : "#b3261e",
+          }}
+        >
+          {online === null
+            ? "checking…"
+            : online
+              ? "● connected"
+              : "● not reachable — is `pnpm watch` running?"}
         </div>
 
         {online && (
           <>
-            <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Stat label="Status" value={status?.running ? (status.busy ? "syncing…" : "running") : "stopped"} />
-              <Stat label="Last sync" value={status?.lastSyncIso ? new Date(status.lastSyncIso).toLocaleTimeString() : "—"} />
-              <Stat label="Folders / files" value={`${status?.counts.folders ?? 0} / ${status?.counts.files ?? 0}`} />
-              <Stat label="Drive" value={status?.driveId === driveId ? "this drive" : status?.driveId ? "other drive" : "—"} />
+            <div
+              style={{
+                marginTop: 16,
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <Stat
+                label="Status"
+                value={
+                  status?.running
+                    ? status.busy
+                      ? "syncing…"
+                      : "running"
+                    : "stopped"
+                }
+              />
+              <Stat
+                label="Last sync"
+                value={
+                  status?.lastSyncIso
+                    ? new Date(status.lastSyncIso).toLocaleTimeString()
+                    : "—"
+                }
+              />
+              <Stat
+                label="Folders / files"
+                value={`${status?.counts.folders ?? 0} / ${status?.counts.files ?? 0}`}
+              />
+              <Stat
+                label="Drive"
+                value={
+                  status?.driveId === driveId
+                    ? "this drive"
+                    : status?.driveId
+                      ? "other drive"
+                      : "—"
+                }
+              />
             </div>
 
-            <label style={{ ...lbl, marginTop: 16 }}>Base directory (on the watcher host)</label>
+            <label style={{ ...lbl, marginTop: 16 }}>
+              Base directory (on the watcher host)
+            </label>
             <div style={{ display: "flex", gap: 8 }}>
-              <input style={inp} readOnly value={config?.baseDir ?? "(not set)"} />
-              <button style={btn} onClick={() => openPicker()}>Browse…</button>
+              <input
+                style={inp}
+                readOnly
+                value={config?.baseDir ?? "(not set)"}
+              />
+              <button style={btn} onClick={() => openPicker()}>
+                Browse…
+              </button>
             </div>
 
             {picker && (
               <div style={pickerBox}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <button style={btn} onClick={() => openPicker(picker.parent)}>⬆ up</button>
-                  <span style={{ fontSize: 12, color: "#666", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 6,
+                  }}
+                >
+                  <button style={btn} onClick={() => openPicker(picker.parent)}>
+                    ⬆ up
+                  </button>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: "#666",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {picker.path}
                   </span>
                 </div>
-                <div style={{ maxHeight: 180, overflow: "auto", border: "1px solid #eee", borderRadius: 6 }}>
-                  {picker.entries.filter((e) => e.isDir).map((e) => (
-                    <div
-                      key={e.name}
-                      onClick={() => openPicker(`${picker.path}/${e.name}`)}
-                      style={{ padding: "6px 10px", cursor: "pointer", fontSize: 13 }}
-                    >
-                      📁 {e.name}
-                    </div>
-                  ))}
+                <div
+                  style={{
+                    maxHeight: 180,
+                    overflow: "auto",
+                    border: "1px solid #eee",
+                    borderRadius: 6,
+                  }}
+                >
+                  {picker.entries
+                    .filter((e) => e.isDir)
+                    .map((e) => (
+                      <div
+                        key={e.name}
+                        onClick={() => openPicker(`${picker.path}/${e.name}`)}
+                        style={{
+                          padding: "6px 10px",
+                          cursor: "pointer",
+                          fontSize: 13,
+                        }}
+                      >
+                        📁 {e.name}
+                      </div>
+                    ))}
                   {picker.entries.filter((e) => e.isDir).length === 0 && (
-                    <div style={{ padding: 10, color: "#999", fontSize: 13 }}>No subfolders</div>
+                    <div style={{ padding: 10, color: "#999", fontSize: 13 }}>
+                      No subfolders
+                    </div>
                   )}
                 </div>
                 <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                  <button style={primary} disabled={busy} onClick={() => chooseBaseDir(picker.path)}>
+                  <button
+                    style={primary}
+                    disabled={busy}
+                    onClick={() => chooseBaseDir(picker.path)}
+                  >
                     Use “{picker.path.split("/").pop() || picker.path}”
                   </button>
-                  <button style={btn} onClick={() => setPicker(null)}>Cancel</button>
+                  <button style={btn} onClick={() => setPicker(null)}>
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
 
-            <label style={{ ...lbl, marginTop: 16 }}>Max download size (MB)</label>
+            <label style={{ ...lbl, marginTop: 16 }}>
+              Max download size (MB)
+            </label>
             <input
               style={inp}
               type="number"
@@ -171,14 +273,22 @@ export function WatcherSettings(props: {
             />
 
             <div style={{ marginTop: 18, display: "flex", gap: 8 }}>
-              <button style={primary} disabled={busy || !config?.baseDir} onClick={applyAndStart}>
+              <button
+                style={primary}
+                disabled={busy || !config?.baseDir}
+                onClick={applyAndStart}
+              >
                 Apply & Start sync
               </button>
-              <button style={btn} disabled={busy} onClick={stop}>Stop</button>
+              <button style={btn} disabled={busy} onClick={stop}>
+                Stop
+              </button>
             </div>
 
             {status?.lastError && (
-              <div style={{ marginTop: 10, fontSize: 12, color: "#b3261e" }}>error: {status.lastError}</div>
+              <div style={{ marginTop: 10, fontSize: 12, color: "#b3261e" }}>
+                error: {status.lastError}
+              </div>
             )}
             {!!status?.skipped?.length && (
               <div style={{ marginTop: 8, fontSize: 12, color: "#a15c00" }}>
@@ -193,7 +303,11 @@ export function WatcherSettings(props: {
           </>
         )}
 
-        {msg && <div style={{ marginTop: 10, fontSize: 12, color: "#444" }}>{msg}</div>}
+        {msg && (
+          <div style={{ marginTop: 10, fontSize: 12, color: "#444" }}>
+            {msg}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -201,7 +315,9 @@ export function WatcherSettings(props: {
 
 function Stat(props: { label: string; value: string }) {
   return (
-    <div style={{ background: "#f6f7f9", borderRadius: 8, padding: "8px 10px" }}>
+    <div
+      style={{ background: "#f6f7f9", borderRadius: 8, padding: "8px 10px" }}
+    >
       <div style={{ fontSize: 11, color: "#888" }}>{props.label}</div>
       <div style={{ fontSize: 14, fontWeight: 600 }}>{props.value}</div>
     </div>
@@ -228,9 +344,40 @@ const modal: React.CSSProperties = {
   overflow: "auto",
   boxShadow: "0 12px 48px rgba(0,0,0,.25)",
 };
-const lbl: React.CSSProperties = { display: "block", fontSize: 12, color: "#555", marginBottom: 2 };
-const inp: React.CSSProperties = { width: "100%", padding: "7px 9px", border: "1px solid #ddd", borderRadius: 6, fontSize: 13, boxSizing: "border-box" };
-const btn: React.CSSProperties = { padding: "7px 10px", border: "1px solid #ddd", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap" };
-const primary: React.CSSProperties = { ...btn, background: "#4385f5", color: "#fff", border: "1px solid #4385f5" };
+const lbl: React.CSSProperties = {
+  display: "block",
+  fontSize: 12,
+  color: "#555",
+  marginBottom: 2,
+};
+const inp: React.CSSProperties = {
+  width: "100%",
+  padding: "7px 9px",
+  border: "1px solid #ddd",
+  borderRadius: 6,
+  fontSize: 13,
+  boxSizing: "border-box",
+};
+const btn: React.CSSProperties = {
+  padding: "7px 10px",
+  border: "1px solid #ddd",
+  borderRadius: 6,
+  background: "#fff",
+  cursor: "pointer",
+  fontSize: 13,
+  whiteSpace: "nowrap",
+};
+const primary: React.CSSProperties = {
+  ...btn,
+  background: "#4385f5",
+  color: "#fff",
+  border: "1px solid #4385f5",
+};
 const iconBtn: React.CSSProperties = { ...btn, padding: "4px 8px" };
-const pickerBox: React.CSSProperties = { marginTop: 8, border: "1px solid #eee", borderRadius: 8, padding: 10, background: "#fafafa" };
+const pickerBox: React.CSSProperties = {
+  marginTop: 8,
+  border: "1px solid #eee",
+  borderRadius: 8,
+  padding: 10,
+  background: "#fafafa",
+};

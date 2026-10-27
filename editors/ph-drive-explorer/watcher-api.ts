@@ -44,7 +44,9 @@ export class WatcherApi {
 
   async health(): Promise<boolean> {
     try {
-      const res = await fetch(`${this.base}/health`, { signal: AbortSignal.timeout(2000) });
+      const res = await fetch(`${this.base}/health`, {
+        signal: AbortSignal.timeout(2000),
+      });
       return res.ok;
     } catch {
       return false;

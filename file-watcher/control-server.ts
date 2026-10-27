@@ -8,7 +8,11 @@
  *   POST /start | /stop     -> { ok }
  *   GET  /fs/list?path=...  -> host fs picker
  */
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -36,17 +40,26 @@ async function readBody(req: IncomingMessage): Promise<any> {
   }
 }
 
-function listDir(p: string): { path: string; parent: string; entries: { name: string; isDir: boolean }[] } {
+function listDir(p: string): {
+  path: string;
+  parent: string;
+  entries: { name: string; isDir: boolean }[];
+} {
   const target = p && p.length ? path.resolve(p) : os.homedir();
   const dirents = fs.readdirSync(target, { withFileTypes: true });
   const entries = dirents
     .filter((d) => !d.name.startsWith("."))
     .map((d) => ({ name: d.name, isDir: d.isDirectory() }))
-    .sort((a, b) => (a.isDir === b.isDir ? a.name.localeCompare(b.name) : a.isDir ? -1 : 1));
+    .sort((a, b) =>
+      a.isDir === b.isDir ? a.name.localeCompare(b.name) : a.isDir ? -1 : 1,
+    );
   return { path: target, parent: path.dirname(target), entries };
 }
 
-export function startControlServer(manager: WatcherManager, port: number): void {
+export function startControlServer(
+  manager: WatcherManager,
+  port: number,
+): void {
   const server = createServer(async (req, res) => {
     try {
       if (req.method === "OPTIONS") {
@@ -86,7 +99,9 @@ export function startControlServer(manager: WatcherManager, port: number): void 
           try {
             return send(res, 200, listDir(url.searchParams.get("path") ?? ""));
           } catch (err: any) {
-            return send(res, 400, { error: err?.message ?? "cannot list directory" });
+            return send(res, 400, {
+              error: err?.message ?? "cannot list directory",
+            });
           }
         }
 

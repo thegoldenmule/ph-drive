@@ -23,8 +23,7 @@ const lsGet = (k: string, d: string) => {
 const lsSet = (k: string, v: string) => {
   try {
     localStorage.setItem(k, v);
-  } catch {
-  }
+  } catch {}
 };
 
 const byName = (a: { name: string }, b: { name: string }) =>
@@ -50,7 +49,8 @@ function humanSize(n: number | null): string {
 }
 
 export default function Editor(props: EditorProps) {
-  const docDriveId = (props.document?.header as { id?: string } | undefined)?.id;
+  const docDriveId = (props.document?.header as { id?: string } | undefined)
+    ?.id;
 
   const [switchboardUrl, setSwitchboardUrl] = useState(() =>
     lsGet(LS.switchboard, "http://localhost:4001"),
@@ -58,13 +58,17 @@ export default function Editor(props: EditorProps) {
   const [watcherUrl, setWatcherUrl] = useState(() =>
     lsGet(LS.watcher, "http://localhost:4111"),
   );
-  const [driveId, setDriveId] = useState(() => docDriveId ?? lsGet(LS.drive, ""));
+  const [driveId, setDriveId] = useState(
+    () => docDriveId ?? lsGet(LS.drive, ""),
+  );
 
   const [folders, setFolders] = useState<DriveFolder[]>([]);
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [cwd, setCwd] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [uploads, setUploads] = useState<{ name: string; status: string }[]>([]);
+  const [uploads, setUploads] = useState<{ name: string; status: string }[]>(
+    [],
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [driveInput, setDriveInput] = useState("");
@@ -129,7 +133,9 @@ export default function Editor(props: EditorProps) {
     .filter((f) => (f.parentFolder ?? null) === cwd)
     .sort(byName);
 
-  const crumbs: { id: string | null; name: string }[] = [{ id: null, name: "My Drive" }];
+  const crumbs: { id: string | null; name: string }[] = [
+    { id: null, name: "My Drive" },
+  ];
   {
     const byId = new Map(folders.map((f) => [f.id, f]));
     const chain: DriveFolder[] = [];
@@ -180,7 +186,9 @@ export default function Editor(props: EditorProps) {
       } catch (e: any) {
         setUploads((u) =>
           u.map((x) =>
-            x.name === file.name ? { ...x, status: `error: ${e?.message ?? e}` } : x,
+            x.name === file.name
+              ? { ...x, status: `error: ${e?.message ?? e}` }
+              : x,
           ),
         );
       }
@@ -201,7 +209,9 @@ export default function Editor(props: EditorProps) {
     if (!window.confirm("Delete this folder and its contents?")) return;
     const ids = descendantIds(id);
     const idSet = new Set(ids);
-    for (const f of files) if (f.parentFolder && idSet.has(f.parentFolder)) await gql.removeFile(driveId, f.id);
+    for (const f of files)
+      if (f.parentFolder && idSet.has(f.parentFolder))
+        await gql.removeFile(driveId, f.id);
     // deepest-first so a parent is never removed before its children
     const toDelete = folders
       .filter((f) => idSet.has(f.id))
@@ -223,10 +233,20 @@ export default function Editor(props: EditorProps) {
 
   if (!driveId) {
     return (
-      <div style={{ padding: 32, fontFamily: "system-ui, sans-serif", maxWidth: 560 }}>
+      <div
+        style={{
+          padding: 32,
+          fontFamily: "system-ui, sans-serif",
+          maxWidth: 560,
+        }}
+      >
         <h2 style={{ fontSize: 20, fontWeight: 600 }}>ph-drive</h2>
-        <p style={{ color: "#555" }}>Connect to a switchboard and pick a drive.</p>
-        <label style={{ display: "block", marginTop: 16, fontSize: 13 }}>Switchboard URL</label>
+        <p style={{ color: "#555" }}>
+          Connect to a switchboard and pick a drive.
+        </p>
+        <label style={{ display: "block", marginTop: 16, fontSize: 13 }}>
+          Switchboard URL
+        </label>
         <input
           value={switchboardUrl}
           onChange={(e) => setSwitchboardUrl(e.target.value)}
@@ -236,8 +256,15 @@ export default function Editor(props: EditorProps) {
           Existing drive id
         </label>
         <div style={{ display: "flex", gap: 8 }}>
-          <input value={driveInput} onChange={(e) => setDriveInput(e.target.value)} style={inputStyle} />
-          <button style={btnStyle} onClick={() => setDriveId(driveInput.trim())}>
+          <input
+            value={driveInput}
+            onChange={(e) => setDriveInput(e.target.value)}
+            style={inputStyle}
+          />
+          <button
+            style={btnStyle}
+            onClick={() => setDriveId(driveInput.trim())}
+          >
             Open
           </button>
         </div>
@@ -288,9 +315,20 @@ export default function Editor(props: EditorProps) {
           borderBottom: "1px solid #eaeaea",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            flex: 1,
+            flexWrap: "wrap",
+          }}
+        >
           {crumbs.map((c, i) => (
-            <span key={c.id ?? "root"} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span
+              key={c.id ?? "root"}
+              style={{ display: "flex", alignItems: "center", gap: 4 }}
+            >
               {i > 0 && <span style={{ color: "#bbb" }}>/</span>}
               <button
                 onClick={() => setCwd(c.id)}
@@ -309,12 +347,23 @@ export default function Editor(props: EditorProps) {
             </span>
           ))}
         </div>
-        <button style={btnStyle} onClick={newFolder}>＋ Folder</button>
-        <button style={btnStyle} onClick={() => setSettingsOpen(true)}>⚙ Settings</button>
+        <button style={btnStyle} onClick={newFolder}>
+          ＋ Folder
+        </button>
+        <button style={btnStyle} onClick={() => setSettingsOpen(true)}>
+          ⚙ Settings
+        </button>
       </div>
 
       {error && (
-        <div style={{ padding: "8px 16px", background: "#fdecea", color: "#b3261e", fontSize: 13 }}>
+        <div
+          style={{
+            padding: "8px 16px",
+            background: "#fdecea",
+            color: "#b3261e",
+            fontSize: 13,
+          }}
+        >
           {error}
         </div>
       )}
@@ -378,12 +427,37 @@ export default function Editor(props: EditorProps) {
         >
           <div style={{ fontWeight: 600, marginBottom: 6 }}>Uploading</div>
           {uploads.map((u) => (
-            <div key={u.name} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div
+              key={u.name}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <span
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {u.name}
               </span>
-              <span style={{ color: u.status.startsWith("error") ? "#b3261e" : u.status === "done" ? "#1a7f37" : "#888" }}>
-                {u.status === "done" ? "✓" : u.status === "uploading" ? "…" : "✕"}
+              <span
+                style={{
+                  color: u.status.startsWith("error")
+                    ? "#b3261e"
+                    : u.status === "done"
+                      ? "#1a7f37"
+                      : "#888",
+                }}
+              >
+                {u.status === "done"
+                  ? "✓"
+                  : u.status === "uploading"
+                    ? "…"
+                    : "✕"}
               </span>
             </div>
           ))}
@@ -500,7 +574,12 @@ function Tile(props: {
         title={props.title}
       >
         {props.href ? (
-          <a href={props.href} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "none" }}>
+          <a
+            href={props.href}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
             {props.title}
           </a>
         ) : (
@@ -508,7 +587,14 @@ function Tile(props: {
         )}
       </div>
       {props.subtitle && (
-        <div style={{ fontSize: 11, color: "#999", textAlign: "center", marginTop: 2 }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: "#999",
+            textAlign: "center",
+            marginTop: 2,
+          }}
+        >
           {props.subtitle}
         </div>
       )}

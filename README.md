@@ -170,30 +170,30 @@ Then in **Chrome** open `http://localhost:3000`, click the drive, and:
 
 ## Scripts
 
-| Script | What it does |
-| --- | --- |
-| `pnpm reactor` | Start the local Switchboard (`ph reactor --dev`, port 4001) |
-| `pnpm connect` | Start Connect studio (`ph connect`, port 3000) |
-| `pnpm create-drive [name]` | Create a `powerhouse/reactor-drive` drive, set its editor, print its id |
-| `pnpm watch` | Start the standalone file-watcher (control API + sync) |
-| `pnpm generate` | Re-run document-model / editor codegen |
-| `pnpm tsc` | Type-check |
-| `pnpm lint` / `pnpm format` | oxlint / oxfmt |
-| `pnpm test` | vitest |
+| Script                      | What it does                                                            |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `pnpm reactor`              | Start the local Switchboard (`ph reactor --dev`, port 4001)             |
+| `pnpm connect`              | Start Connect studio (`ph connect`, port 3000)                          |
+| `pnpm create-drive [name]`  | Create a `powerhouse/reactor-drive` drive, set its editor, print its id |
+| `pnpm watch`                | Start the standalone file-watcher (control API + sync)                  |
+| `pnpm generate`             | Re-run document-model / editor codegen                                  |
+| `pnpm tsc`                  | Type-check                                                              |
+| `pnpm lint` / `pnpm format` | oxlint / oxfmt                                                          |
+| `pnpm test`                 | vitest                                                                  |
 
 ## Configuration (file-watcher)
 
 The watcher reads bootstrap defaults from env, then is reconfigured at runtime by the editor
 and persists to a local JSON file.
 
-| Env var | Default | Purpose |
-| --- | --- | --- |
-| `WATCHER_PORT` | `4111` | Control-API port |
-| `SWITCHBOARD_URL` | `http://localhost:4001` | Switchboard to sync against |
-| `DRIVE_ID` | — | Drive to sync (set via the editor if omitted) |
-| `WATCH_DIR` | — | Base directory to mirror (set via the editor if omitted) |
-| `MAX_DOWNLOAD_SIZE` | `100MB` | Skip downloading files larger than this |
-| `WATCHER_CONFIG` | `~/.ph-drive-watcher/config.json` | Where the persisted config lives |
+| Env var             | Default                           | Purpose                                                  |
+| ------------------- | --------------------------------- | -------------------------------------------------------- |
+| `WATCHER_PORT`      | `4111`                            | Control-API port                                         |
+| `SWITCHBOARD_URL`   | `http://localhost:4001`           | Switchboard to sync against                              |
+| `DRIVE_ID`          | —                                 | Drive to sync (set via the editor if omitted)            |
+| `WATCH_DIR`         | —                                 | Base directory to mirror (set via the editor if omitted) |
+| `MAX_DOWNLOAD_SIZE` | `100MB`                           | Skip downloading files larger than this                  |
+| `WATCHER_CONFIG`    | `~/.ph-drive-watcher/config.json` | Where the persisted config lives                         |
 
 ### Watcher control API
 
@@ -209,10 +209,10 @@ document whose operations reference the attachment (`?documentId=…`). The watc
 the `download-target` route, which with the default filesystem attachment storage returns an
 HMAC-signed URL, so production needs a signing secret:
 
-| Env var | Required | Purpose |
-| --- | --- | --- |
+| Env var                            | Required                                  | Purpose                                                                                                                                                                                                                                    |
+| ---------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `PH_ATTACHMENT_URL_SIGNING_SECRET` | yes, for filesystem storage in production | Signs attachment download URLs. At least 32 characters, no surrounding whitespace; use the same value on every Switchboard sharing the attachment storage. Without it `download-target` answers `503`, so the entrypoint refuses to start. |
-| `PH_ATTACHMENT_STORAGE` | no (`filesystem`) | `s3` uses presigned URLs and does not need the signing secret. |
+| `PH_ATTACHMENT_STORAGE`            | no (`filesystem`)                         | `s3` uses presigned URLs and does not need the signing secret.                                                                                                                                                                             |
 
 Supply the secret at runtime, never in the image:
 
