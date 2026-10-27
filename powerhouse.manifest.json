@@ -17,9 +17,7 @@
     {
       "id": "PhDriveExplorer",
       "name": "Ph Drive Explorer",
-      "documentTypes": [
-        "powerhouse/reactor-drive"
-      ]
+      "documentTypes": ["powerhouse/reactor-drive"]
     }
   ],
   "processors": [],
