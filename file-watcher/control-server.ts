@@ -16,6 +16,8 @@ import {
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { errorMessage } from "../lib/unknown.js";
+import { parseConfigPatch } from "./config.js";
 import type { WatcherManager } from "./index.js";
 
 function send(res: ServerResponse, status: number, body: unknown): void {
@@ -29,7 +31,7 @@ function send(res: ServerResponse, status: number, body: unknown): void {
   res.end(json);
 }
 
-async function readBody(req: IncomingMessage): Promise<any> {
+async function readBody(req: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
   for await (const c of req) chunks.push(c as Buffer);
   if (!chunks.length) return {};
@@ -60,7 +62,10 @@ export function startControlServer(
   manager: WatcherManager,
   port: number,
 ): void {
-  const server = createServer(async (req, res) => {
+  const handle = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> => {
     try {
       if (req.method === "OPTIONS") {
         send(res, 204, {});
@@ -80,7 +85,7 @@ export function startControlServer(
           return send(res, 200, manager.getConfig());
 
         case "PUT /config": {
-          const patch = await readBody(req);
+          const patch = parseConfigPatch(await readBody(req));
           const cfg = await manager.setConfig(patch);
           return send(res, 200, cfg);
         }
@@ -98,9 +103,10 @@ export function startControlServer(
         case "GET /fs/list": {
           try {
             return send(res, 200, listDir(url.searchParams.get("path") ?? ""));
-          } catch (err: any) {
+          } catch (err) {
             return send(res, 400, {
-              error: err?.message ?? "cannot list directory",
+              error:
+                err instanceof Error ? err.message : "cannot list directory",
             });
           }
         }
@@ -108,9 +114,12 @@ export function startControlServer(
         default:
           return send(res, 404, { error: `no route ${route}` });
       }
-    } catch (err: any) {
-      send(res, 500, { error: err?.message ?? String(err) });
+    } catch (err) {
+      send(res, 500, { error: errorMessage(err) });
     }
+  };
+  const server = createServer((req, res) => {
+    void handle(req, res);
   });
 
   server.listen(port, "127.0.0.1", () => {

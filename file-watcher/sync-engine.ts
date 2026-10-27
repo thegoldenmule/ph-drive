@@ -12,6 +12,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { DriveGql, folderPaths } from "../lib/drive-client.js";
+import { errorMessage } from "../lib/unknown.js";
 import { Attachments } from "./attachments.js";
 import type { WatcherConfig } from "./config.js";
 import { subscribeToDrive } from "./subscription.js";
@@ -139,9 +140,7 @@ export class SyncEngine {
       (s, detail) => {
         if (s === "connected") this.log("switchboard subscription connected");
         else if (s === "error")
-          this.log(
-            `subscription error: ${detail instanceof Error ? detail.message : String(detail ?? "")}`,
-          );
+          this.log(`subscription error: ${errorMessage(detail)}`);
       },
     );
 
@@ -173,15 +172,20 @@ export class SyncEngine {
       do {
         this.dirty = false;
         await this.reconcile();
-      } while (this.dirty && this.running);
+      } while (this.shouldResync());
       this.status.lastSyncIso = new Date().toISOString();
       this.status.lastError = null;
-    } catch (err: any) {
-      this.status.lastError = err?.message ?? String(err);
+    } catch (err) {
+      this.status.lastError = errorMessage(err);
       this.log(`error: ${this.status.lastError}`);
     } finally {
       this.busy = false;
     }
+  }
+
+  /** A trigger arrived while reconciling (method call so TS doesn't narrow `dirty` across the await). */
+  private shouldResync(): boolean {
+    return this.dirty && this.running;
   }
 
   private async reconcile(): Promise<void> {

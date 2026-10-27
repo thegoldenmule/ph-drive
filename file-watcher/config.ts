@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { isRecord } from "../lib/unknown.js";
 
 export type WatcherConfig = {
   switchboardUrl: string;
@@ -39,10 +40,38 @@ function defaults(): WatcherConfig {
 export function loadConfig(): WatcherConfig {
   try {
     const raw = fs.readFileSync(CONFIG_PATH, "utf8");
-    return { ...defaults(), ...JSON.parse(raw) };
+    return { ...defaults(), ...parseConfigPatch(JSON.parse(raw)) };
   } catch {
     return defaults();
   }
+}
+
+function isNullableString(v: unknown): v is string | null {
+  return v === null || typeof v === "string";
+}
+
+function isStringArray(v: unknown): v is string[] {
+  return Array.isArray(v) && v.every((e) => typeof e === "string");
+}
+
+/**
+ * Pick the known, correctly-typed WatcherConfig fields out of untrusted JSON
+ * (config file or editor request body). Unknown or wrong-typed keys are dropped.
+ */
+export function parseConfigPatch(value: unknown): Partial<WatcherConfig> {
+  if (!isRecord(value)) return {};
+  const out: Partial<WatcherConfig> = {};
+  if (typeof value.switchboardUrl === "string")
+    out.switchboardUrl = value.switchboardUrl;
+  if (isNullableString(value.driveId)) out.driveId = value.driveId;
+  if (isNullableString(value.baseDir)) out.baseDir = value.baseDir;
+  if (typeof value.maxDownloadSizeBytes === "number")
+    out.maxDownloadSizeBytes = value.maxDownloadSizeBytes;
+  if (isStringArray(value.exclude)) out.exclude = value.exclude;
+  if (typeof value.pollIntervalMs === "number")
+    out.pollIntervalMs = value.pollIntervalMs;
+  if (typeof value.enabled === "boolean") out.enabled = value.enabled;
+  return out;
 }
 
 export function saveConfig(cfg: WatcherConfig): void {
