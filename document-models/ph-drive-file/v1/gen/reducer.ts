@@ -8,6 +8,17 @@ import { phDriveFileContentOperations } from "../src/reducers/content.js";
 
 import { SetFileContentInputSchema } from "./schema/zod.js";
 
+const schemaMemo = new Map<() => unknown, unknown>();
+
+function memoizedSchema<T>(makeSchema: () => T): T {
+  let schema = schemaMemo.get(makeSchema) as T | undefined;
+  if (schema === undefined) {
+    schema = makeSchema();
+    schemaMemo.set(makeSchema, schema);
+  }
+  return schema;
+}
+
 const stateReducer: StateReducer<PhDriveFilePHState> = (
   state,
   action,
@@ -18,7 +29,7 @@ const stateReducer: StateReducer<PhDriveFilePHState> = (
   }
   switch (action.type) {
     case "SET_FILE_CONTENT": {
-      SetFileContentInputSchema().parse(action.input);
+      memoizedSchema(SetFileContentInputSchema).parse(action.input);
 
       phDriveFileContentOperations.setFileContentOperation(
         (state as any)[action.scope],
