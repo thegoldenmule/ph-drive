@@ -5,6 +5,7 @@ import {
   type WatcherConfig,
   type WatcherStatus,
 } from "../watcher-api.js";
+import { errorMessage } from "../../../lib/unknown.js";
 
 export function WatcherSettings(props: {
   watcherUrl: string;
@@ -46,8 +47,8 @@ export function WatcherSettings(props: {
   const openPicker = async (path?: string) => {
     try {
       setPicker(await api.listDir(path ?? config?.baseDir ?? ""));
-    } catch (e: any) {
-      setMsg(`picker error: ${e?.message ?? e}`);
+    } catch (e) {
+      setMsg(`picker error: ${errorMessage(e)}`);
     }
   };
 
@@ -65,8 +66,8 @@ export function WatcherSettings(props: {
       setPicker(null);
       setMsg(`base directory set to ${c.baseDir}`);
       await poll();
-    } catch (e: any) {
-      setMsg(`error: ${e?.message ?? e}`);
+    } catch (e) {
+      setMsg(`error: ${errorMessage(e)}`);
     } finally {
       setBusy(false);
     }
@@ -84,8 +85,8 @@ export function WatcherSettings(props: {
       await api.start();
       setMsg("syncing started");
       await poll();
-    } catch (e: any) {
-      setMsg(`error: ${e?.message ?? e}`);
+    } catch (e) {
+      setMsg(`error: ${errorMessage(e)}`);
     } finally {
       setBusy(false);
     }
@@ -188,7 +189,7 @@ export function WatcherSettings(props: {
                 readOnly
                 value={config?.baseDir ?? "(not set)"}
               />
-              <button style={btn} onClick={() => openPicker()}>
+              <button style={btn} onClick={() => void openPicker()}>
                 Browse…
               </button>
             </div>
@@ -203,7 +204,10 @@ export function WatcherSettings(props: {
                     marginBottom: 6,
                   }}
                 >
-                  <button style={btn} onClick={() => openPicker(picker.parent)}>
+                  <button
+                    style={btn}
+                    onClick={() => void openPicker(picker.parent)}
+                  >
                     ⬆ up
                   </button>
                   <span
@@ -231,7 +235,9 @@ export function WatcherSettings(props: {
                     .map((e) => (
                       <div
                         key={e.name}
-                        onClick={() => openPicker(`${picker.path}/${e.name}`)}
+                        onClick={() =>
+                          void openPicker(`${picker.path}/${e.name}`)
+                        }
                         style={{
                           padding: "6px 10px",
                           cursor: "pointer",
@@ -251,7 +257,7 @@ export function WatcherSettings(props: {
                   <button
                     style={primary}
                     disabled={busy}
-                    onClick={() => chooseBaseDir(picker.path)}
+                    onClick={() => void chooseBaseDir(picker.path)}
                   >
                     Use “{picker.path.split("/").pop() || picker.path}”
                   </button>
@@ -276,11 +282,11 @@ export function WatcherSettings(props: {
               <button
                 style={primary}
                 disabled={busy || !config?.baseDir}
-                onClick={applyAndStart}
+                onClick={() => void applyAndStart()}
               >
                 Apply & Start sync
               </button>
-              <button style={btn} disabled={busy} onClick={stop}>
+              <button style={btn} disabled={busy} onClick={() => void stop()}>
                 Stop
               </button>
             </div>
@@ -290,12 +296,12 @@ export function WatcherSettings(props: {
                 error: {status.lastError}
               </div>
             )}
-            {!!status?.skipped?.length && (
+            {!!status?.skipped.length && (
               <div style={{ marginTop: 8, fontSize: 12, color: "#a15c00" }}>
                 skipped (too large): {status.skipped.join(", ")}
               </div>
             )}
-            {!!status?.conflicts?.length && (
+            {!!status?.conflicts.length && (
               <div style={{ marginTop: 4, fontSize: 12, color: "#a15c00" }}>
                 conflicts (server kept): {status.conflicts.join(", ")}
               </div>

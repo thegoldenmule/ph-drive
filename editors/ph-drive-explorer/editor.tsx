@@ -5,6 +5,7 @@ import {
   type DriveFile,
   type DriveFolder,
 } from "../../lib/drive-client.js";
+import { errorMessage } from "../../lib/unknown.js";
 import { uploadAttachment } from "./attachments-browser.js";
 import { WatcherSettings } from "./components/watcher-settings.js";
 
@@ -115,8 +116,8 @@ export default function Editor(props: EditorProps) {
       setFolders(t.folders);
       setFiles(t.files);
       setError(null);
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
+    } catch (e) {
+      setError(errorMessage(e));
     }
   }, [gql, driveId]);
 
@@ -183,11 +184,11 @@ export default function Editor(props: EditorProps) {
         setUploads((u) =>
           u.map((x) => (x.name === file.name ? { ...x, status: "done" } : x)),
         );
-      } catch (e: any) {
+      } catch (e) {
         setUploads((u) =>
           u.map((x) =>
             x.name === file.name
-              ? { ...x, status: `error: ${e?.message ?? e}` }
+              ? { ...x, status: `error: ${errorMessage(e)}` }
               : x,
           ),
         );
@@ -269,7 +270,7 @@ export default function Editor(props: EditorProps) {
           </button>
         </div>
         <div style={{ marginTop: 16 }}>
-          <button style={primaryBtn} onClick={createDrive}>
+          <button style={primaryBtn} onClick={() => void createDrive()}>
             + Create a new drive
           </button>
         </div>
@@ -294,7 +295,7 @@ export default function Editor(props: EditorProps) {
         e.preventDefault();
         dragDepth.current = 0;
         setDragOver(false);
-        void handleDrop(Array.from(e.dataTransfer?.files ?? []));
+        void handleDrop(Array.from(e.dataTransfer.files));
       }}
       style={{
         position: "relative",
@@ -347,7 +348,7 @@ export default function Editor(props: EditorProps) {
             </span>
           ))}
         </div>
-        <button style={btnStyle} onClick={newFolder}>
+        <button style={btnStyle} onClick={() => void newFolder()}>
           ＋ Folder
         </button>
         <button style={btnStyle} onClick={() => setSettingsOpen(true)}>
@@ -388,7 +389,7 @@ export default function Editor(props: EditorProps) {
                 title={f.name}
                 subtitle="Folder"
                 onOpen={() => setCwd(f.id)}
-                onDelete={() => deleteFolder(f.id)}
+                onDelete={() => void deleteFolder(f.id)}
               />
             ))}
             {childFiles.map((f) => (
@@ -403,7 +404,7 @@ export default function Editor(props: EditorProps) {
                     ? `${switchboardUrl.replace(/\/+$/, "")}/attachments/${f.sha256}?documentId=${encodeURIComponent(f.id)}`
                     : undefined
                 }
-                onDelete={() => deleteFile(f.id)}
+                onDelete={() => void deleteFile(f.id)}
               />
             ))}
           </div>
