@@ -6,6 +6,7 @@
  *   SWITCHBOARD_URL=http://host:4001 pnpm create-drive [name]
  */
 import { DriveGql } from "../lib/drive-client.js";
+import { errorMessage } from "../lib/unknown.js";
 
 const SWITCHBOARD_URL = process.env.SWITCHBOARD_URL ?? "http://localhost:4001";
 const name = process.argv[2] ?? "My Drive";
@@ -31,6 +32,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Failed to create drive:", err.message ?? err);
+  console.error("Failed to create drive:", errorMessage(err));
   process.exit(1);
 });

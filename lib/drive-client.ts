@@ -6,6 +6,8 @@
  * reactor-drive subgraph collides by name with the auto doc-model subgraph.
  */
 
+import { isRecord } from "./unknown.js";
+
 export const REACTOR_DRIVE_DOCUMENT_TYPE = "powerhouse/reactor-drive";
 export const PHDRIVE_FILE_DOCUMENT_TYPE = "phdrive/file";
 export const DRIVE_CHILD_RELATIONSHIP_TYPE = "drive/child";
@@ -29,6 +31,25 @@ export type DriveFile = {
 };
 
 export type DriveNode = DriveFolder | DriveFile;
+
+function stringOrNull(v: unknown): string | null {
+  return typeof v === "string" ? v : null;
+}
+
+/** Build a DriveFile from a `phdrive/file` document's raw (untyped) state. */
+function toDriveFile(id: string, name: string, state: unknown): DriveFile {
+  const g = isRecord(state) && isRecord(state.global) ? state.global : {};
+  return {
+    kind: "file",
+    id,
+    name,
+    parentFolder: stringOrNull(g.parentFolder),
+    content: stringOrNull(g.content),
+    mimeType: stringOrNull(g.mimeType),
+    size: typeof g.size === "number" ? g.size : null,
+    sha256: stringOrNull(g.sha256),
+  };
+}
 
 export type DriveTree = { folders: DriveFolder[]; files: DriveFile[] };
 
@@ -56,7 +77,7 @@ export class DriveGql {
     this.endpoint = base.endsWith("/graphql/r") ? base : `${base}/graphql/r`;
   }
 
-  async gql<T = any>(
+  async gql<T = unknown>(
     query: string,
     variables: Record<string, unknown> = {},
   ): Promise<T> {
@@ -247,7 +268,12 @@ export class DriveGql {
   async listFiles(driveId: string): Promise<DriveFile[]> {
     const d = await this.gql<{
       documentOutgoingRelationships: {
-        items: { id: string; name: string; documentType: string; state: any }[];
+        items: {
+          id: string;
+          name: string;
+          documentType: string;
+          state: unknown;
+        }[];
       };
     }>(
       `query($s:String!,$rt:String!){documentOutgoingRelationships(sourceIdentifier:$s,relationshipType:$rt){items{id name documentType state}}}`,
@@ -255,19 +281,7 @@ export class DriveGql {
     );
     return d.documentOutgoingRelationships.items
       .filter((it) => it.documentType === PHDRIVE_FILE_DOCUMENT_TYPE)
-      .map((it) => {
-        const g = (it.state?.global ?? {}) as Record<string, unknown>;
-        return {
-          kind: "file" as const,
-          id: it.id,
-          name: it.name,
-          parentFolder: (g.parentFolder as string | null) ?? null,
-          content: (g.content as string | null) ?? null,
-          mimeType: (g.mimeType as string | null) ?? null,
-          size: (g.size as number | null) ?? null,
-          sha256: (g.sha256 as string | null) ?? null,
-        };
-      });
+      .map((it) => toDriveFile(it.id, it.name, it.state));
   }
 
   async listFolders(driveId: string): Promise<DriveFolder[]> {
@@ -275,35 +289,41 @@ export class DriveGql {
       document: {
         document: {
           operations: {
-            items: { index: number; action: { type: string; input: any } }[];
-          };
+            items: {
+              index: number;
+              action: { type: string; input: unknown };
+            }[];
+          } | null;
         };
       } | null;
     }>(
       `query($id:String!){document(identifier:$id){document{operations{items{index action{type input}}}}}}`,
       { id: driveId },
     );
-    const items = d.document?.document?.operations?.items ?? [];
+    const items = d.document?.document.operations?.items ?? [];
     items.sort((a, b) => a.index - b.index);
     const folders = new Map<string, DriveFolder>();
     for (const { action: a } of items) {
-      const input = a.input ?? {};
+      const input = isRecord(a.input) ? a.input : {};
+      const folderId = input.folderId;
+      if (typeof folderId !== "string") continue;
       if (a.type === "ADD_FOLDER") {
-        folders.set(input.folderId, {
+        folders.set(folderId, {
           kind: "folder",
-          id: input.folderId,
-          name: input.name,
-          parentFolder: input.parentFolderId ?? null,
+          id: folderId,
+          name: typeof input.name === "string" ? input.name : "",
+          parentFolder: stringOrNull(input.parentFolderId),
         });
       } else if (a.type === "UPDATE_FOLDER") {
-        const f = folders.get(input.folderId);
+        const f = folders.get(folderId);
         if (f) {
           if (typeof input.name === "string") f.name = input.name;
+          // absent = rename only; null = move to root
           if (input.parentFolderId !== undefined)
-            f.parentFolder = input.parentFolderId ?? null;
+            f.parentFolder = stringOrNull(input.parentFolderId);
         }
       } else if (a.type === "REMOVE_FOLDER") {
-        folders.delete(input.folderId);
+        folders.delete(folderId);
       }
     }
     return [...folders.values()];
@@ -319,24 +339,16 @@ export class DriveGql {
 
   async getFile(fileId: string): Promise<DriveFile | null> {
     const d = await this.gql<{
-      document: { document: { id: string; name: string; state: any } } | null;
+      document: {
+        document: { id: string; name: string; state: unknown };
+      } | null;
     }>(
       `query($id:String!){document(identifier:$id){document{id name state}}}`,
       { id: fileId },
     );
     const doc = d.document?.document;
     if (!doc) return null;
-    const g = (doc.state?.global ?? {}) as Record<string, unknown>;
-    return {
-      kind: "file",
-      id: doc.id,
-      name: doc.name,
-      parentFolder: (g.parentFolder as string | null) ?? null,
-      content: (g.content as string | null) ?? null,
-      mimeType: (g.mimeType as string | null) ?? null,
-      size: (g.size as number | null) ?? null,
-      sha256: (g.sha256 as string | null) ?? null,
-    };
+    return toDriveFile(doc.id, doc.name, doc.state);
   }
 
   private async mutate(
