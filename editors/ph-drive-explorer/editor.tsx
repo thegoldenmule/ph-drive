@@ -1,3 +1,4 @@
+import { useSelectedDriveId } from "@powerhousedao/reactor-browser";
 import type { EditorProps } from "document-model";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -84,25 +85,11 @@ export default function Editor(props: EditorProps) {
     }
   }, [docDriveId]);
 
-  // Connect's drive "app" gets no `document` prop; it exposes the open drive id on window.ph.
+  // Connect's drive "app" gets no `document` prop; use Connect's selected drive instead.
+  const selectedDriveId = useSelectedDriveId();
   useEffect(() => {
-    if (docDriveId || driveId) return;
-    const read = () =>
-      (globalThis as { ph?: { selectedDriveId?: string } }).ph?.selectedDriveId;
-    const id = read();
-    if (id) {
-      setDriveId(id);
-      return;
-    }
-    const t = setInterval(() => {
-      const v = read();
-      if (v) {
-        setDriveId(v);
-        clearInterval(t);
-      }
-    }, 500);
-    return () => clearInterval(t);
-  }, [docDriveId, driveId]);
+    if (!docDriveId && !driveId && selectedDriveId) setDriveId(selectedDriveId);
+  }, [docDriveId, driveId, selectedDriveId]);
   useEffect(() => lsSet(LS.switchboard, switchboardUrl), [switchboardUrl]);
   useEffect(() => lsSet(LS.watcher, watcherUrl), [watcherUrl]);
   useEffect(() => {
