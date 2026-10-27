@@ -1,5 +1,16 @@
-/** Upload/download file bytes via the switchboard attachment service. Content is sha256-addressed; refs look like `attachment://v1:<sha256hex>`. */
-import { createRemoteAttachmentService } from "@powerhousedao/reactor-attachments";
+/**
+ * Upload/download file bytes via the switchboard attachment service. Content is
+ * sha256-addressed; refs look like `attachment://v1:<sha256hex>`.
+ *
+ * Remote reads are document-authorized: the switchboard only serves bytes to a
+ * reader that names a document whose operations reference the attachment, so
+ * every download carries the referencing ph-drive-file document id.
+ */
+import {
+  AttachmentAlreadyExists,
+  createRemoteAttachmentService,
+  type IAttachmentService,
+} from "@powerhousedao/reactor-attachments";
 import type { AttachmentRef } from "@powerhousedao/reactor";
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
@@ -8,51 +19,51 @@ export function sha256Hex(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-export function refForHash(hash: string): AttachmentRef {
-  return `attachment://v1:${hash}` as AttachmentRef;
-}
-
-export function hashFromRef(ref: string): string | null {
-  const m = /^attachment:\/\/v\d+:(.+)$/.exec(ref);
-  return m ? m[1] : null;
+/**
+ * reserve() rejects with AttachmentAlreadyExists when the hash is already
+ * stored (hash-first dedup). Match by name too, in case a second copy of the
+ * package is loaded and `instanceof` fails across module instances.
+ */
+function isAlreadyExists(err: unknown): err is AttachmentAlreadyExists {
+  if (err instanceof AttachmentAlreadyExists) return true;
+  return (
+    err instanceof Error &&
+    err.name === "AttachmentAlreadyExists" &&
+    typeof (err as Partial<AttachmentAlreadyExists>).ref === "string"
+  );
 }
 
 export class Attachments {
-  private readonly svc: ReturnType<typeof createRemoteAttachmentService>;
+  private readonly svc: IAttachmentService;
 
-  constructor(switchboardUrl: string) {
-    this.svc = createRemoteAttachmentService({
-      remoteUrl: switchboardUrl.replace(/\/+$/, ""),
-    });
+  constructor(switchboardUrl: string, svc?: IAttachmentService) {
+    this.svc =
+      svc ??
+      createRemoteAttachmentService({
+        remoteUrl: switchboardUrl.replace(/\/+$/, ""),
+      });
   }
 
-  async exists(ref: string): Promise<boolean> {
-    try {
-      await this.svc.stat(ref as AttachmentRef);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /** Upload bytes, deduping by content hash. */
+  /** Upload bytes, deduping by content hash (the server answers 409 when it already has them). */
   async upload(
     bytes: Uint8Array,
     fileName: string,
     mimeType: string,
   ): Promise<{ ref: AttachmentRef; hash: string; size: number }> {
     const hash = sha256Hex(bytes);
-    const ref = refForHash(hash);
     const size = bytes.byteLength;
-    if (await this.exists(ref)) {
-      return { ref, hash, size };
+    let handle;
+    try {
+      handle = await this.svc.reserve({
+        mimeType,
+        fileName,
+        clientHash: hash,
+        sizeBytes: size,
+      });
+    } catch (err) {
+      if (isAlreadyExists(err)) return { ref: err.ref, hash, size };
+      throw err;
     }
-    const handle = await this.svc.reserve({
-      mimeType,
-      fileName,
-      clientHash: hash,
-      sizeBytes: size,
-    });
     const stream = Readable.toWeb(
       Readable.from(Buffer.from(bytes)),
     ) as ReadableStream<Uint8Array>;
@@ -60,18 +71,17 @@ export class Attachments {
     return { ref: result.ref, hash: result.hash, size };
   }
 
-  async download(ref: string): Promise<Uint8Array> {
-    const resp = await this.svc.get(ref as AttachmentRef);
+  /** Download bytes; `documentId` is the ph-drive-file document that references `ref`. */
+  async download(ref: string, documentId: string): Promise<Uint8Array> {
+    const resp = await this.svc.get(ref as AttachmentRef, { documentId });
     const reader = resp.body.getReader();
     const chunks: Uint8Array[] = [];
     let total = 0;
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      if (value) {
-        chunks.push(value);
-        total += value.byteLength;
-      }
+      chunks.push(value);
+      total += value.byteLength;
     }
     const out = new Uint8Array(total);
     let off = 0;
