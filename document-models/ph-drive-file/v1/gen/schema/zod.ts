@@ -21,7 +21,11 @@ export function PhDriveFileStateSchema(): z.ZodObject<
 > {
   return z.object({
     __typename: z.literal("PhDriveFileState").optional(),
-    content: z.string().nullish(),
+    content: z
+      .custom<`attachment://v${number}:${string}`>((val) =>
+        /^attachment:\/\/v\d+:.+$/.test(val as string),
+      )
+      .nullish(),
     mimeType: z.string().nullish(),
     parentFolder: z.string().nullish(),
     sha256: z.string().nullish(),
@@ -33,7 +37,9 @@ export function SetFileContentInputSchema(): z.ZodObject<
   Properties<SetFileContentInput>
 > {
   return z.object({
-    content: z.string(),
+    content: z.custom<`attachment://v${number}:${string}`>((val) =>
+      /^attachment:\/\/v\d+:.+$/.test(val as string),
+    ),
     mimeType: z.string(),
     parentFolder: z.string().nullish(),
     sha256: z.string(),

@@ -63,7 +63,7 @@ export type Scalars = {
 };
 
 export type PhDriveFileState = {
-  content: Maybe<Scalars["String"]["output"]>;
+  content: Maybe<Scalars["AttachmentRef"]["output"]>;
   mimeType: Maybe<Scalars["String"]["output"]>;
   parentFolder: Maybe<Scalars["String"]["output"]>;
   sha256: Maybe<Scalars["String"]["output"]>;
@@ -71,7 +71,7 @@ export type PhDriveFileState = {
 };
 
 export type SetFileContentInput = {
-  content: Scalars["String"]["input"];
+  content: Scalars["AttachmentRef"]["input"];
   mimeType: Scalars["String"]["input"];
   parentFolder?: InputMaybe<Scalars["String"]["input"]>;
   sha256: Scalars["String"]["input"];

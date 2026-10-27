@@ -20,7 +20,7 @@ scalar Amount
 scalar Upload
 
 type PhDriveFileState {
-  content: String
+  content: AttachmentRef
   mimeType: String
   size: Int
   sha256: String
@@ -30,7 +30,7 @@ type PhDriveFileState {
 # content
 
 input SetFileContentInput {
-  content: String!
+  content: AttachmentRef!
   mimeType: String!
   size: Int!
   sha256: String!
