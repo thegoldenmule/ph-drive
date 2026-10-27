@@ -15,10 +15,10 @@
   "apps": [],
   "editors": [
     {
-      "name": "PhDriveExplorer",
-      "id": "ph-drive-explorer",
+      "id": "PhDriveExplorer",
+      "name": "Ph Drive Explorer",
       "documentTypes": [
-        "phdrive/file"
+        "powerhouse/reactor-drive"
       ]
     }
   ],
