@@ -2,10 +2,6 @@
  * This is a scaffold file meant for customization:
  * - change it by adding new tests or modifying the existing ones
  */
-/**
- * This is a scaffold file meant for customization:
- * - change it by adding new tests or modifying the existing ones
- */
 
 import {
   assertIsPhDriveFileDocument,
@@ -19,6 +15,16 @@ import {
 } from "document-models/ph-drive-file/v1";
 import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
+
+function expectInvalidDocument(document: unknown) {
+  expect(isPhDriveFileDocument(document)).toBe(false);
+  expect(() => assertIsPhDriveFileDocument(document)).toThrow(ZodError);
+}
+
+function expectInvalidState(state: unknown) {
+  expect(isPhDriveFileState(state)).toBe(false);
+  expect(() => assertIsPhDriveFileState(state)).toThrow(ZodError);
+}
 
 describe("PhDriveFile Document Model", () => {
   it("should create a new PhDriveFile document", () => {
@@ -34,88 +40,58 @@ describe("PhDriveFile Document Model", () => {
     expect(document.state.local).toStrictEqual(initialLocalState);
     expect(isPhDriveFileDocument(document)).toBe(true);
     expect(isPhDriveFileState(document.state)).toBe(true);
+    expect(() => assertIsPhDriveFileDocument(document)).not.toThrow();
+    expect(() => assertIsPhDriveFileState(document.state)).not.toThrow();
   });
+
   it("should reject a document that is not a PhDriveFile document", () => {
     const wrongDocumentType = utils.createDocument();
     wrongDocumentType.header.documentType = "the-wrong-thing-1234";
-    try {
-      expect(assertIsPhDriveFileDocument(wrongDocumentType)).toThrow();
-      expect(isPhDriveFileDocument(wrongDocumentType)).toBe(false);
-    } catch (error) {
-      expect(error).toBeInstanceOf(ZodError);
-    }
+    expectInvalidDocument(wrongDocumentType);
   });
-  const wrongState = utils.createDocument();
-  // @ts-expect-error - we are testing the error case
-  wrongState.state.global = {
-    ...{ notWhat: "you want" },
-  };
-  try {
-    expect(isPhDriveFileState(wrongState.state)).toBe(false);
-    expect(assertIsPhDriveFileState(wrongState.state)).toThrow();
-    expect(isPhDriveFileDocument(wrongState)).toBe(false);
-    expect(assertIsPhDriveFileDocument(wrongState)).toThrow();
-  } catch (error) {
-    expect(error).toBeInstanceOf(ZodError);
-  }
 
-  const wrongInitialState = utils.createDocument();
-  // @ts-expect-error - we are testing the error case
-  wrongInitialState.initialState.global = {
-    ...{ notWhat: "you want" },
-  };
-  try {
-    expect(isPhDriveFileState(wrongInitialState.state)).toBe(false);
-    expect(assertIsPhDriveFileState(wrongInitialState.state)).toThrow();
-    expect(isPhDriveFileDocument(wrongInitialState)).toBe(false);
-    expect(assertIsPhDriveFileDocument(wrongInitialState)).toThrow();
-  } catch (error) {
-    expect(error).toBeInstanceOf(ZodError);
-  }
+  it("accepts unknown keys in global state (every field is nullable)", () => {
+    const document = utils.createDocument();
+    // @ts-expect-error - we are testing an unexpected state shape
+    document.state.global = { notWhat: "you want" };
+    expect(isPhDriveFileState(document.state)).toBe(true);
+    expect(isPhDriveFileDocument(document)).toBe(true);
+  });
 
-  const missingIdInHeader = utils.createDocument();
-  // @ts-expect-error - we are testing the error case
-  delete missingIdInHeader.header.id;
-  try {
-    expect(isPhDriveFileDocument(missingIdInHeader)).toBe(false);
-    expect(assertIsPhDriveFileDocument(missingIdInHeader)).toThrow();
-  } catch (error) {
-    expect(error).toBeInstanceOf(ZodError);
-  }
+  it("should reject a state whose content is not an AttachmentRef", () => {
+    const document = utils.createDocument();
+    // @ts-expect-error - we are testing the error case
+    document.state.global.content = "https://example.com/file.txt";
+    expectInvalidState(document.state);
+    expectInvalidDocument(document);
 
-  const missingNameInHeader = utils.createDocument();
-  // @ts-expect-error - we are testing the error case
-  delete missingNameInHeader.header.name;
-  try {
-    expect(isPhDriveFileDocument(missingNameInHeader)).toBe(false);
-    expect(assertIsPhDriveFileDocument(missingNameInHeader)).toThrow();
-  } catch (error) {
-    expect(error).toBeInstanceOf(ZodError);
-  }
+    // @ts-expect-error - empty string is not a valid AttachmentRef either
+    document.state.global.content = "";
+    expectInvalidState(document.state);
+  });
 
-  const missingCreatedAtUtcIsoInHeader = utils.createDocument();
-  // @ts-expect-error - we are testing the error case
-  delete missingCreatedAtUtcIsoInHeader.header.createdAtUtcIso;
-  try {
-    expect(isPhDriveFileDocument(missingCreatedAtUtcIsoInHeader)).toBe(false);
-    expect(
-      assertIsPhDriveFileDocument(missingCreatedAtUtcIsoInHeader),
-    ).toThrow();
-  } catch (error) {
-    expect(error).toBeInstanceOf(ZodError);
-  }
+  it("should reject a state with a wrongly typed field", () => {
+    const document = utils.createDocument();
+    // @ts-expect-error - we are testing the error case
+    document.state.global.size = "large";
+    expectInvalidState(document.state);
+    expectInvalidDocument(document);
+  });
 
-  const missingLastModifiedAtUtcIsoInHeader = utils.createDocument();
-  // @ts-expect-error - we are testing the error case
-  delete missingLastModifiedAtUtcIsoInHeader.header.lastModifiedAtUtcIso;
-  try {
-    expect(isPhDriveFileDocument(missingLastModifiedAtUtcIsoInHeader)).toBe(
-      false,
-    );
-    expect(
-      assertIsPhDriveFileDocument(missingLastModifiedAtUtcIsoInHeader),
-    ).toThrow();
-  } catch (error) {
-    expect(error).toBeInstanceOf(ZodError);
-  }
+  it("should reject a document with an invalid initial state", () => {
+    const document = utils.createDocument();
+    // @ts-expect-error - we are testing the error case
+    document.initialState.global = { content: "not-a-ref" };
+    expectInvalidState(document.initialState);
+    expectInvalidDocument(document);
+  });
+
+  it.each(["id", "name", "createdAtUtcIso", "lastModifiedAtUtcIso"] as const)(
+    "should reject a document missing header.%s",
+    (key) => {
+      const document = utils.createDocument();
+      delete (document.header as Partial<typeof document.header>)[key];
+      expectInvalidDocument(document);
+    },
+  );
 });
