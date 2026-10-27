@@ -348,7 +348,12 @@ export default function Editor(props: EditorProps) {
                 icon={fileIcon(f.name, f.mimeType)}
                 title={f.name}
                 subtitle={humanSize(f.size)}
-                href={f.sha256 ? `${switchboardUrl.replace(/\/+$/, "")}/attachments/${f.sha256}` : undefined}
+                href={
+                  // Byte reads are document-authorized: name the file document that references the hash.
+                  f.sha256
+                    ? `${switchboardUrl.replace(/\/+$/, "")}/attachments/${f.sha256}?documentId=${encodeURIComponent(f.id)}`
+                    : undefined
+                }
                 onDelete={() => deleteFile(f.id)}
               />
             ))}
