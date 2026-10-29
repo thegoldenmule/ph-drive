@@ -140,6 +140,44 @@ from `dist`.
 pnpm install
 ```
 
+The chat sheet comes from a sibling `powerhouse-nl` checkout (`nl-runtime`, `nl-drive`,
+`nl-manifest` as `file:../powerhouse-nl/packages/<pkg>`). Build it there first
+(`pnpm -r build`). After rebuilding it, run `pnpm install` here (it re-copies the `file:`
+packages) and `rm -rf node_modules/.vite` before restarting Connect.
+
+## Chat sheet
+
+The explorer has an in-browser chat sheet (⌘J on macOS, Ctrl+Shift+Space elsewhere; Esc
+collapses it). It turns requests such as "make a folder called Invoices in Reports" into
+one proposed change; nothing changes until you press **Confirm**. It offers folder create,
+rename, move and delete, and file rename and delete. Copy, file create and file move are
+never offered.
+
+Its two models are GGUF files. In development, Connect serves them from the gitignored
+`models/` directory at `/models/<file>`; put these two files there (the names come from
+`editors/ph-drive-explorer/artifact-manifest.json`):
+
+- `LFM2.5-350M-drive-m2bb-20261029-Q4_K_M.gguf` (the command model)
+- `Kev-0.8B-vault-ft1-20261024-Q4_K_M.gguf` (the decision model; optional, it can be
+  turned off in the sheet's Model settings)
+
+Model settings in the sheet also take a base URL for another host and a read token for a
+private one (sent as `Authorization: Bearer`).
+
+### Chat models and their licences
+
+The model files are not in this repository and are not covered by its licence.
+
+- **Command model**, modified from [LiquidAI/LFM2.5-350M](https://huggingface.co/LiquidAI/LFM2.5-350M)
+  (a LoRA fine-tune merged into the base weights, quantised to Q4_K_M): **LFM Open License
+  v1.0**. Its Commercial Use limitation applies to an entity with annual revenue of
+  US$10,000,000 or more; read the licence before commercial use.
+- **Decision model**, modified from [jaredpalmer/kev-0.8b](https://huggingface.co/jaredpalmer/kev-0.8b)
+  (itself from Qwen/Qwen3.5-0.8B-Base): **Apache-2.0**.
+
+Each file's licence text ships beside it where it is published. The chat's runtime code and
+its vendored wasm are listed in [`THIRD_PARTY_NOTICES`](THIRD_PARTY_NOTICES).
+
 ## Running it
 
 Three processes. Use three terminals.

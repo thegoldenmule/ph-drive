@@ -10,3 +10,6 @@ projects-import.js
 
 # Vetra codegen backups of model documents
 backup-documents/
+
+# Dev model files (GGUFs), served by Studio at /models/<file>; never committed
+models/
