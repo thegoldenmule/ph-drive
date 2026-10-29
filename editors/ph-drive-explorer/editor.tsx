@@ -85,11 +85,12 @@ export default function Editor(props: EditorProps) {
     }
   }, [docDriveId]);
 
-  // Connect's drive "app" gets no `document` prop; use Connect's selected drive instead.
+  // Connect's drive "app" gets no `document` prop; use Connect's selected drive
+  // instead (over a drive id remembered from an earlier visit).
   const selectedDriveId = useSelectedDriveId();
   useEffect(() => {
-    if (!docDriveId && !driveId && selectedDriveId) setDriveId(selectedDriveId);
-  }, [docDriveId, driveId, selectedDriveId]);
+    if (!docDriveId && selectedDriveId) setDriveId(selectedDriveId);
+  }, [docDriveId, selectedDriveId]);
   useEffect(() => lsSet(LS.switchboard, switchboardUrl), [switchboardUrl]);
   useEffect(() => lsSet(LS.watcher, watcherUrl), [watcherUrl]);
   useEffect(() => {
