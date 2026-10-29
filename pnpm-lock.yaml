@@ -82,6 +82,15 @@ importers:
       graphql-ws:
         specifier: ^6.0.8
         version: 6.0.8(crossws@0.3.5)(graphql@16.12.0)(ws@8.21.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))
+      nl-drive:
+        specifier: file:../powerhouse-nl/packages/nl-drive
+        version: file:../powerhouse-nl/packages/nl-drive(c4c88b664db8e63dcc6d45ca7277de80)
+      nl-manifest:
+        specifier: file:../powerhouse-nl/packages/nl-manifest
+        version: file:../powerhouse-nl/packages/nl-manifest(nl-runtime@file:../powerhouse-nl/packages/nl-runtime(@powerhousedao/reactor-browser@6.2.3(a78131b4539c5ed51b2eb16af185b7c2))(document-model@6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0))(react@19.2.6)(zod@4.3.6))(zod@4.3.6)
+      nl-runtime:
+        specifier: file:../powerhouse-nl/packages/nl-runtime
+        version: file:../powerhouse-nl/packages/nl-runtime(@powerhousedao/reactor-browser@6.2.3(a78131b4539c5ed51b2eb16af185b7c2))(document-model@6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0))(react@19.2.6)(zod@4.3.6)
       oxfmt:
         specifier: 0.68.0
         version: 0.68.0
@@ -8123,6 +8132,38 @@ packages:
     resolution: {integrity: sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==}
     engines: {node: '>= 0.6'}
 
+  nl-drive@file:../powerhouse-nl/packages/nl-drive:
+    resolution: {directory: ../powerhouse-nl/packages/nl-drive, type: directory}
+    peerDependencies:
+      '@powerhousedao/reactor-browser': '>=6.2.2-dev.47 <6.2.3 || >=6.2.3-0 <6.3.0'
+      nl-manifest: '*'
+      nl-runtime: '*'
+      react: ^19
+      zod: ^4
+    peerDependenciesMeta:
+      '@powerhousedao/reactor-browser':
+        optional: true
+      react:
+        optional: true
+
+  nl-manifest@file:../powerhouse-nl/packages/nl-manifest:
+    resolution: {directory: ../powerhouse-nl/packages/nl-manifest, type: directory}
+    hasBin: true
+    peerDependencies:
+      nl-runtime: '*'
+      zod: ^4
+
+  nl-runtime@file:../powerhouse-nl/packages/nl-runtime:
+    resolution: {directory: ../powerhouse-nl/packages/nl-runtime, type: directory}
+    peerDependencies:
+      '@powerhousedao/reactor-browser': '>=6.2.2-dev.47 <6.2.3 || >=6.2.3-0 <6.3.0'
+      document-model: '>=6.2.2-dev.47 <6.2.3 || >=6.2.3-0 <6.3.0'
+      react: ^19
+      zod: ^4
+    peerDependenciesMeta:
+      '@powerhousedao/reactor-browser':
+        optional: true
+
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
 
@@ -9737,6 +9778,11 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
+  tsx@4.23.15:
+    resolution: {integrity: sha512-Yiex1Ovn8z2xPpOWckIiysV1SSyRMY9BkLF++q0yKiDxCqRhosKfMg3janKkiLBwZ5c/YryloKwGZcrEmtwxKw==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   type-fest@0.16.0:
     resolution: {integrity: sha512-eaBzG6MxNzEn9kiwvtre90cXaNLkmadMWa1zQMs3XORCXNbsH/OewwbxC5ia9dCxIxnTAsSxXJaa/p5y8DlvJg==}
     engines: {node: '>=10'}
@@ -11126,7 +11172,7 @@ snapshots:
 
   '@babel/helper-annotate-as-pure@7.29.7':
     dependencies:
-      '@babel/types': 7.29.7
+      '@babel/types': 7.29.11
 
   '@babel/helper-compilation-targets@7.29.7':
     dependencies:
@@ -11144,7 +11190,7 @@ snapshots:
       '@babel/helper-optimise-call-expression': 7.29.7
       '@babel/helper-replace-supers': 7.29.7(@babel/core@7.29.7(supports-color@7.2.0))(supports-color@7.2.0)
       '@babel/helper-skip-transparent-expression-wrappers': 7.29.7(supports-color@7.2.0)
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color
@@ -11171,8 +11217,8 @@ snapshots:
 
   '@babel/helper-member-expression-to-functions@7.29.7(supports-color@7.2.0)':
     dependencies:
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
-      '@babel/types': 7.29.7
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
+      '@babel/types': 7.29.11
     transitivePeerDependencies:
       - supports-color
 
@@ -11194,7 +11240,7 @@ snapshots:
 
   '@babel/helper-optimise-call-expression@7.29.7':
     dependencies:
-      '@babel/types': 7.29.7
+      '@babel/types': 7.29.11
 
   '@babel/helper-plugin-utils@7.29.7': {}
 
@@ -11203,7 +11249,7 @@ snapshots:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-annotate-as-pure': 7.29.7
       '@babel/helper-wrap-function': 7.29.7(supports-color@7.2.0)
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11212,14 +11258,14 @@ snapshots:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-member-expression-to-functions': 7.29.7(supports-color@7.2.0)
       '@babel/helper-optimise-call-expression': 7.29.7
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-skip-transparent-expression-wrappers@7.29.7(supports-color@7.2.0)':
     dependencies:
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
-      '@babel/types': 7.29.7
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
+      '@babel/types': 7.29.11
     transitivePeerDependencies:
       - supports-color
 
@@ -11234,8 +11280,8 @@ snapshots:
   '@babel/helper-wrap-function@7.29.7(supports-color@7.2.0)':
     dependencies:
       '@babel/template': 7.29.7
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
-      '@babel/types': 7.29.7
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
+      '@babel/types': 7.29.11
     transitivePeerDependencies:
       - supports-color
 
@@ -11256,7 +11302,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-plugin-utils': 7.29.7
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11291,7 +11337,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-plugin-utils': 7.29.7
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11325,7 +11371,7 @@ snapshots:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-plugin-utils': 7.29.7
       '@babel/helper-remap-async-to-generator': 7.29.7(@babel/core@7.29.7(supports-color@7.2.0))(supports-color@7.2.0)
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11386,7 +11432,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-plugin-utils': 7.29.7
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11443,7 +11489,7 @@ snapshots:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-compilation-targets': 7.29.7
       '@babel/helper-plugin-utils': 7.29.7
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11529,7 +11575,7 @@ snapshots:
       '@babel/helper-plugin-utils': 7.29.7
       '@babel/plugin-transform-destructuring': 7.29.7(@babel/core@7.29.7(supports-color@7.2.0))(supports-color@7.2.0)
       '@babel/plugin-transform-parameters': 7.29.7(@babel/core@7.29.7(supports-color@7.2.0))
-      '@babel/traverse': 7.29.7(supports-color@7.2.0)
+      '@babel/traverse': 7.29.10(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11729,7 +11775,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.29.7(supports-color@7.2.0)
       '@babel/helper-plugin-utils': 7.29.7
-      '@babel/types': 7.29.7
+      '@babel/types': 7.29.11
       esutils: 2.0.3
 
   '@babel/runtime@7.29.7': {}
@@ -16470,7 +16516,7 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.9
       estree-walker: 2.0.2
-      picomatch: 4.0.4
+      picomatch: 4.0.7
     optionalDependencies:
       rollup: 4.65.1
 
@@ -22375,6 +22421,29 @@ snapshots:
 
   negotiator@1.0.0: {}
 
+  nl-drive@file:../powerhouse-nl/packages/nl-drive(c4c88b664db8e63dcc6d45ca7277de80):
+    dependencies:
+      nl-manifest: file:../powerhouse-nl/packages/nl-manifest(nl-runtime@file:../powerhouse-nl/packages/nl-runtime(@powerhousedao/reactor-browser@6.2.3(a78131b4539c5ed51b2eb16af185b7c2))(document-model@6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0))(react@19.2.6)(zod@4.3.6))(zod@4.3.6)
+      nl-runtime: file:../powerhouse-nl/packages/nl-runtime(@powerhousedao/reactor-browser@6.2.3(a78131b4539c5ed51b2eb16af185b7c2))(document-model@6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0))(react@19.2.6)(zod@4.3.6)
+      zod: 4.3.6
+    optionalDependencies:
+      '@powerhousedao/reactor-browser': 6.2.3(a78131b4539c5ed51b2eb16af185b7c2)
+      react: 19.2.6
+
+  nl-manifest@file:../powerhouse-nl/packages/nl-manifest(nl-runtime@file:../powerhouse-nl/packages/nl-runtime(@powerhousedao/reactor-browser@6.2.3(a78131b4539c5ed51b2eb16af185b7c2))(document-model@6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0))(react@19.2.6)(zod@4.3.6))(zod@4.3.6):
+    dependencies:
+      nl-runtime: file:../powerhouse-nl/packages/nl-runtime(@powerhousedao/reactor-browser@6.2.3(a78131b4539c5ed51b2eb16af185b7c2))(document-model@6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0))(react@19.2.6)(zod@4.3.6)
+      tsx: 4.23.15
+      zod: 4.3.6
+
+  nl-runtime@file:../powerhouse-nl/packages/nl-runtime(@powerhousedao/reactor-browser@6.2.3(a78131b4539c5ed51b2eb16af185b7c2))(document-model@6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0))(react@19.2.6)(zod@4.3.6):
+    dependencies:
+      document-model: 6.2.3(@sentry/node-core@10.60.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))(rolldown@1.0.2)(supports-color@7.2.0)
+      react: 19.2.6
+      zod: 4.3.6
+    optionalDependencies:
+      '@powerhousedao/reactor-browser': 6.2.3(a78131b4539c5ed51b2eb16af185b7c2)
+
   no-case@3.0.4:
     dependencies:
       lower-case: 2.0.2
@@ -24244,6 +24313,12 @@ snapshots:
   tslib@2.8.1: {}
 
   tsx@4.22.4:
+    dependencies:
+      esbuild: 0.28.1
+    optionalDependencies:
+      fsevents: 2.3.3
+
+  tsx@4.23.15:
     dependencies:
       esbuild: 0.28.1
     optionalDependencies:
