@@ -1,5 +1,6 @@
 import { useSelectedDriveId } from "@powerhousedao/reactor-browser";
 import type { EditorProps } from "document-model";
+import { ChatSheet, useChatSession } from "nl-runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   DriveGql,
@@ -8,6 +9,13 @@ import {
 } from "../../lib/drive-client.js";
 import { errorMessage } from "../../lib/unknown.js";
 import { uploadAttachment } from "./attachments-browser.js";
+import {
+  CHAT_LABELS,
+  CHAT_STORAGE_PREFIX,
+  DRIVE_CHAT_ARTIFACTS,
+  useDriveChat,
+  useExplorerChatContext,
+} from "./chat-context.js";
 import { WatcherSettings } from "./components/watcher-settings.js";
 
 const LS = {
@@ -74,6 +82,7 @@ export default function Editor(props: EditorProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [driveInput, setDriveInput] = useState("");
+  const [driveName, setDriveName] = useState("My Drive");
   const dragDepth = useRef(0);
 
   const gql = useMemo(() => new DriveGql(switchboardUrl), [switchboardUrl]);
@@ -115,6 +124,34 @@ export default function Editor(props: EditorProps) {
     return () => clearInterval(id);
   }, [refresh]);
 
+  useEffect(() => {
+    if (!driveId) return;
+    let live = true;
+    gql
+      .getDriveName(driveId)
+      .then((n) => {
+        if (live) setDriveName(n || "My Drive");
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [gql, driveId]);
+
+  const onChatChanged = useCallback(() => void refresh(), [refresh]);
+  const chat = useDriveChat(gql, driveId, onChatChanged);
+  const chatSession = useChatSession(driveId, {
+    storagePrefix: CHAT_STORAGE_PREFIX,
+  });
+  const chatContext = useExplorerChatContext({
+    driveId,
+    driveName,
+    cwd,
+    folders,
+    files,
+    recent: chatSession.state.recent,
+  });
+
   const childFolders = folders
     .filter((f) => (f.parentFolder ?? null) === cwd)
     .sort(byName);
@@ -123,7 +160,7 @@ export default function Editor(props: EditorProps) {
     .sort(byName);
 
   const crumbs: { id: string | null; name: string }[] = [
-    { id: null, name: "My Drive" },
+    { id: null, name: driveName },
   ];
   {
     const byId = new Map(folders.map((f) => [f.id, f]));
@@ -473,6 +510,18 @@ export default function Editor(props: EditorProps) {
           Drop files to upload
         </div>
       )}
+
+      <ChatSheet
+        chatManifest={chat.chatManifest}
+        artifacts={DRIVE_CHAT_ARTIFACTS}
+        context={chatContext}
+        session={chatSession}
+        refSource={chat.refSource}
+        executors={chat.executors}
+        drive={chat.layer}
+        storagePrefix={CHAT_STORAGE_PREFIX}
+        labels={CHAT_LABELS}
+      />
 
       {settingsOpen && (
         <WatcherSettings

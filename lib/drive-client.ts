@@ -350,6 +350,20 @@ export class DriveGql {
     return { folders, files };
   }
 
+  /** The drive's name: its state's `name` (SET_DRIVE_NAME), else the document name. */
+  async getDriveName(driveId: string): Promise<string | null> {
+    const d = await this.gql<{
+      document: { document: { name: string; state: unknown } } | null;
+    }>(`query($id:String!){document(identifier:$id){document{name state}}}`, {
+      id: driveId,
+    });
+    const doc = d.document?.document;
+    if (!doc) return null;
+    const g =
+      isRecord(doc.state) && isRecord(doc.state.global) ? doc.state.global : {};
+    return stringOrNull(g.name) || doc.name || null;
+  }
+
   async getFile(fileId: string): Promise<DriveFile | null> {
     const d = await this.gql<{
       document: {
