@@ -27,8 +27,11 @@ import {
 import rawArtifacts from "./artifact-manifest.json" with { type: "json" };
 
 /**
- * The drive LoRA m2bb and Kev-FT, as `nl export` wrote them (powerhouse-nl
- * `.artifacts/drive/runs/LFM2.5-350M-drive-m2bb-20261029/export/`). Each
+ * The LoRA m2bv and Kev-FT, as `nl export` wrote them (powerhouse-nl
+ * `.artifacts/vault/runs/LFM2.5-350M-vault-m2bv-20261029/export/`): the pair
+ * drive-selection-2 chose and drive-confirmatory measured, with the binder in
+ * override mode. m2bv's answer table covers the vault, the drive and
+ * ph-drive's two file intents. Each
  * `devPath` is `/models/<file>`: the gitignored `models/` directory, served
  * by Studio from this origin.
  */

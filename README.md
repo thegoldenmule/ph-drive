@@ -157,7 +157,7 @@ Its two models are GGUF files. In development, Connect serves them from the giti
 `models/` directory at `/models/<file>`; put these two files there (the names come from
 `editors/ph-drive-explorer/artifact-manifest.json`):
 
-- `LFM2.5-350M-drive-m2bb-20261029-Q4_K_M.gguf` (the command model)
+- `LFM2.5-350M-vault-m2bv-20261029-Q4_K_M.gguf` (the command model)
 - `Kev-0.8B-vault-ft1-20261024-Q4_K_M.gguf` (the decision model; optional, it can be
   turned off in the sheet's Model settings)
 
