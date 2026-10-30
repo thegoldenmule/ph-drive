@@ -105,18 +105,37 @@ export interface DriveChat {
 }
 
 /**
+ * The ref binder after step 2, in `override` mode: refs the request settles
+ * (a verbatim name, a path, "this folder", "top level") replace step 2's
+ * value. This is the condition the drive's blind selection chose and the
+ * confirmatory run measured (powerhouse-nl docs/notes/m4/ref-binding.md,
+ * selection-2-results.md, confirmatory-results.md).
+ */
+export const CHAT_BIND_REFS = "override" as const;
+
+/** ph-drive's install of nl-drive, bound to one `DriveGql`, with the binder on. */
+export function explorerDrive(gql: DriveGql) {
+  return phDrive(gql, undefined, { bindRefs: CHAT_BIND_REFS });
+}
+
+/**
  * The reactor-drive adapter over this editor's `DriveGql`: its `graphql`
  * executor, its RefSource over `listTree()` (read fresh each turn), the
- * merged manifest with ph-drive's file intents, and the drive layer.
- * Copy, file create and file move are not among its ops, so they are never
- * offered.
+ * merged manifest with ph-drive's file intents, and the drive layer with
+ * the ref binder in override mode. Copy, file create and file move are not
+ * among its ops, so they are never offered.
+ *
+ * The chat's target is always the drive (`explorerChatContext`, with no
+ * documents), and a drive target with a layer is filled by the layer, not
+ * by the document resolver, so nl-runtime's "always ask on another
+ * document's exact title" default does not apply here.
  */
 export function useDriveChat(
   gql: DriveGql,
   driveId: string,
   onChanged: () => void,
 ): DriveChat {
-  const drive = useMemo(() => phDrive(gql), [gql]);
+  const drive = useMemo(() => explorerDrive(gql), [gql]);
   const layer = useMemo(
     () => drive.layer({ driveId, onChanged }),
     [drive, driveId, onChanged],

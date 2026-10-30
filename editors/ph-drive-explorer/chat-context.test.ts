@@ -2,8 +2,10 @@ import { phDrive } from "nl-drive/ph-drive";
 import { describe, expect, it } from "vitest";
 import { DriveGql, type DriveFolder } from "../../lib/drive-client.js";
 import {
+  CHAT_BIND_REFS,
   DRIVE_CHAT_ARTIFACTS,
   explorerChatContext,
+  explorerDrive,
   explorerTargetName,
 } from "./chat-context.js";
 
@@ -47,5 +49,31 @@ describe("explorer chat context", () => {
     for (const op of ["COPY_NODE", "ADD_FILE", "UPDATE_FILE", "SET_DRIVE_NAME"])
       expect(keys).not.toContain(`document-drive:${op}`);
     expect(DRIVE_CHAT_ARTIFACTS.artifacts.lora.devPath).toMatch(/^\/models\//);
+  });
+
+  it("turns the ref binder on in override mode", () => {
+    expect(CHAT_BIND_REFS).toBe("override");
+    const layer = explorerDrive(new DriveGql("http://localhost:4001")).layer({
+      driveId: "drv",
+    });
+    expect(Object.hasOwn(layer, "bindRefs")).toBe(true);
+    // Without the binder option the layer has no hook (the old default).
+    const plain = phDrive(new DriveGql("http://localhost:4001")).layer({
+      driveId: "drv",
+    });
+    expect(Object.hasOwn(plain, "bindRefs")).toBe(false);
+  });
+
+  it("never offers the drive's documents as retarget candidates", () => {
+    const c = explorerChatContext({
+      driveId: "drv",
+      driveName: "Team",
+      cwd: null,
+      folders: FOLDERS,
+      files: [],
+      recent: [],
+    });
+    expect(c.frame.target.kind).toBe("drive");
+    expect(c.documents).toEqual([]);
   });
 });
