@@ -161,6 +161,11 @@ Its two models are GGUF files. In development, Connect serves them from the giti
 - `Kev-0.8B-vault-ft1-20261024-Q4_K_M.gguf` (the decision model; optional, it can be
   turned off in the sheet's Model settings)
 
+Put each model's licence and "modified from" README beside it as `<stem>.LICENSE` and
+`<stem>.README.md` (powerhouse-nl's `nl export` writes them as `LICENSE` and `README.md`
+beside each GGUF). `models/` is gitignored, so a deploy that serves the GGUFs must copy
+these pairs with them.
+
 Model settings in the sheet also take a base URL for another host and a read token for a
 private one (sent as `Authorization: Bearer`).
 
