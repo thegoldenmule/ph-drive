@@ -10,11 +10,13 @@ nl-runtime (the in-browser chat sheet)
    License: AGPL-3.0-only (powerhouse-nl's LICENSE)
 
 nl-runtime vendors wllama 3.8.1 and its compat build (MIT), with llama.cpp /
-ggml (MIT) and smaller libraries compiled into the wasm. Their notices and
-licence texts are in nl-runtime's own THIRD_PARTY_NOTICES, which ships with
-the package:
+ggml (MIT) and smaller libraries compiled into the wasm (the wllama-*.wasm
+assets in dist/browser). Their notices and licence texts are in nl-runtime's
+own THIRD_PARTY_NOTICES, which ships with the package and which the build
+copies beside this file:
 
-    node_modules/nl-runtime/THIRD_PARTY_NOTICES
+    source tree:  node_modules/nl-runtime/THIRD_PARTY_NOTICES
+    dist/:        THIRD_PARTY_NOTICES.nl-runtime
 
 That file is the authoritative list; this entry points at it and repeats
 nothing from it.
@@ -22,11 +24,15 @@ nothing from it.
 ==============================================================================
 nl-drive, nl-manifest
    powerhouse-nl, packages/nl-drive and packages/nl-manifest (file: deps)
-   License: AGPL-3.0-only (powerhouse-nl's LICENSE). No vendored code.
+   License: AGPL-3.0-only (powerhouse-nl's LICENSE). No vendored code; each
+   package's own THIRD_PARTY_NOTICES says so and points at nl-runtime's.
 
 ==============================================================================
 Model weights (not part of this repository)
 
 The chat's two GGUF files are downloaded at run time (in development, from
-the gitignored models/ directory) and are never committed here. Their
-licences are listed in README.md, "Chat models and their licences".
+the gitignored models/ directory) and are never committed here or shipped in
+dist/. Their licences are listed in README.md, "Chat models and their
+licences", and in THIRD_PARTY_NOTICES.nl-runtime: LFM Open License v1.0 for
+the command model (modified from LiquidAI/LFM2.5-350M), Apache-2.0 for the
+decision model (Kev-FT, from jaredpalmer/kev-0.8b on Qwen/Qwen3.5-0.8B-Base).
